@@ -1,0 +1,37 @@
+import requests
+from bs4 import BeautifulSoup as bs
+from re import search,sub
+from time import sleep
+from functools import reduce
+
+class LimeTorrents:
+	def __init__(self):
+		self.url = 'https://limetorrents.unblockit.win'
+		self.search = '/search/all/##'
+		self.delimiter = '-'
+		self.sort = '/search/all/##/@@'
+		self.sort_type = {'age':'date','size':'size','seed':'seeds','leech':'leechs'}
+		self.page = '/@@'
+
+	def _search_torrents(self,query,sort=None):
+		url_attach = sub('@@',self.sort_type[sort],sub('##',sub(r'\s',self.delimiter,query),self.sort)) if sort and sort in self.sort_type else sub('##',sub(r'\s',self.delimiter,query),self.search)
+		soup = bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@','1',self.page)),allow_redirects=True).text, 'html.parser')
+		pages = [int(x.text) for x in soup.find('div',class_='search_stat').findAll('a') if search(r'\d+',x.text)]; pages = max(pages) if pages else 1
+		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i+1),self.page)),allow_redirects=True).text, 'html.parser').findAll('td')[12:] for i in range(2)],[])
+
+	def build_list(self,query,sort=None):
+		search_list = self._search_torrents(query,sort)
+		singles = [search_list[i*6:i*6+6] for i in range(len(search_list)//6)]
+		torrents = list()
+		for torrent in singles:
+			name = torrent[0].text
+			_,link_page = [t.get('href') for t in torrent[0].findAll('a')]
+			info,size,seed,leech = [t.text for t in torrent[1:5]]
+			last_check,category = info.split(' - in ')
+			torrents.append(['LimeTorrents',name,link_page,last_check,category,size,int(sub(',','',seed)),int(sub(',','',leech))])
+		return torrents
+
+	def get_magnet_link(self,torrent_page):
+		soup = soup = bs(requests.get('{}{}'.format(self.url,torrent_page),allow_redirects=True).text,'html.parser')
+		try: return [x.get('href') for x in soup.findAll('a',{'class':'csprite_dltorrent'}) if search('magnet',x.get('href'))][0]
+		except IndexError: return None
