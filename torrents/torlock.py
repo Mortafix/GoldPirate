@@ -12,12 +12,12 @@ class TorLock:
 		self.delimiter = '+'
 		self.sort = '/all/torrents/##.html?sort=@@&order=desc'
 		self.sort_type = {'age':'added','size':'size','seed':'seeds','leech':'peers'}
-		self.page = '/@@.html'
+		self.page = '&page=@@'
 		self.user_agent = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36'}
 
 	def _search_torrents(self,query,sort=None):
 		url_attach = sub('@@',self.sort_type[sort],sub('##',sub(r'\s',self.delimiter,query),self.sort)) if sort and sort in self.sort_type else sub('##',sub(r'\s',self.delimiter,query),self.search)
-		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i),self.page)),headers=self.user_agent).text, 'html.parser').findAll('td')[27:] for i in range(2)],[])
+		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i+1),self.page)),headers=self.user_agent).text, 'html.parser').findAll('td')[27:] for i in range(2)],[])
 
 
 	def build_list(self,query,sort=None):
@@ -46,8 +46,3 @@ class TorLock:
 		soup = soup = bs(requests.get('{}{}'.format(self.url,torrent_page),allow_redirects=True).text,'html.parser')
 		try: return [a.get('href') for a in soup.findAll('a') if search('magnet',str(a.get('href')))][0]
 		except IndexError: return None
-
-if __name__ == '__main__':
-	tr = TorLock()
-	torrents = tr.build_list('Harry potter calice')
-	print(torrents)

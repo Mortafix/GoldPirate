@@ -16,7 +16,7 @@ class X1337:
 
 	def _search_torrents(self,query,sort=None):
 		url_attach = sub('@@',self.sort_type[sort],sub('##',sub(r'\s',self.delimiter,query),self.sort)) if sort and sort in self.sort_type else sub('##',sub(r'\s',self.delimiter,query),self.search)
-		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i),self.page)),headers=self.user_agent).text, 'html.parser').findAll('td') for i in range(2)],[])
+		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i+1),self.page)),headers=self.user_agent).text, 'html.parser').findAll('td') for i in range(2)],[])
 
 	def build_list(self,query,sort=None):
 		search_list = self._search_torrents(query,sort)
