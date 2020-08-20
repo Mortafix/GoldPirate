@@ -1,15 +1,14 @@
+#!/usr/bin/env python3
+# Author: Moris Doratiotto
+
 import os
 import subprocess
 import json
 import fileinput
 from functools import reduce
-import requests
 from requests.exceptions import ConnectionError
-from bs4 import BeautifulSoup as bs
 from re import search,sub
-from time import sleep
 import argparse
-import subprocess as sp
 from tabulate import tabulate
 from qbittorrent import Client
 from qbittorrent.client import LoginRequired
@@ -86,7 +85,7 @@ if __name__ == '__main__':
 	parser.add_argument('-q',type=str,help='query to search',metavar=('QUERY'))
 	parser.add_argument('-s',type=str,help='sort result [age,size,seed,leech]',metavar=('SORT'))
 	parser.add_argument('-c',action='store_true',help='change configuration')
-	parser.add_argument('-v','--version',help='script version',action='version',version='GoldPirate v1.0.0')
+	parser.add_argument('-v','--version',help='script version',action='version',version='gold-pirate v1.0.0')
 	args = parser.parse_args()
 	query = args.q
 	sort = args.s if args.s else DEFAULT_SORT
