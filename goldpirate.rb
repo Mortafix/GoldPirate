@@ -75,6 +75,7 @@ class Goldpirate < Formula
     (libexec/"bin").install "config.json"
     (libexec/"bin"/"torrents").install "torrents/x1337.py"
     (libexec/"bin"/"torrents").install "torrents/limetorrents.py"
+    (libexec/"bin"/"torrents").install "torrents/torlock.py"
 
     # Final Script
     (libexec/"bin").install "GoldPirate.py" => "gold-pirate"
