@@ -31,3 +31,4 @@ gold-pirate -q "Harry Potter" -s age
 ## Supported Sites
 1. [1337x](https://1337x.unblockit.win/)
 2. [LimeTorrents](https://limetorrents.unblockit.win/)
+3. [TorLock](https://torlock.unblockit.win)

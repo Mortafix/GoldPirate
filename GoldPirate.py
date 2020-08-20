@@ -14,15 +14,16 @@ from qbittorrent import Client
 from qbittorrent.client import LoginRequired
 from torrents.limetorrents import LimeTorrents
 from torrents.x1337 import X1337
+from torrents.torlock import TorLock
 
-SITES = {'1337x':X1337(),'LimeTorrents':LimeTorrents()}
+SITES = {'1337x':X1337(),'LimeTorrents':LimeTorrents(),'TorLock':TorLock()}
 class Colors: 
 	BOLD='\x1b[1m'
 	GREEN,LGREEN = '\x1b[1m\x1b[32m','\x1b[0m\x1b[32m'
 	RED,LRED = '\x1b[1m\x1b[31m','\x1b[0m\x1b[31m'
 	BLUE,LBLUE = '\x1b[1m\x1b[34m','\x1b[0m\x1b[34m'
 	YELLOW,LYELLOW =  '\x1b[1m\x1b[33m','\x1b[0m\x1b[33m'
-	SITES = {'1337x':'\x1b[38;5;161m','LimeTorrents':'\x1b[38;5;48m'}
+	SITES = {'1337x':'\x1b[38;5;161m','LimeTorrents':'\x1b[38;5;48m','TorLock':'\x1b[38;5;123m'}
 	ENDC = '\033[0m'
 
 def read_config(cfg_path):
