@@ -86,7 +86,7 @@ if __name__ == '__main__':
 	parser.add_argument('-q',type=str,help='query to search',metavar=('QUERY'))
 	parser.add_argument('-s',type=str,help='sort result [age,size,seed,leech]',metavar=('SORT'))
 	parser.add_argument('-c',action='store_true',help='change configuration')
-	parser.add_argument('--version',help='script version',action='version',version='GoldPirate v1.0.0')
+	parser.add_argument('-v','--version',help='script version',action='version',version='GoldPirate v1.0.0')
 	args = parser.parse_args()
 	query = args.q
 	sort = args.s if args.s else DEFAULT_SORT
