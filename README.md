@@ -32,3 +32,4 @@ gold-pirate -q "Harry Potter" -s age
 1. [1337x](https://1337x.unblockit.win/)
 2. [LimeTorrents](https://limetorrents.unblockit.win/)
 3. [TorLock](https://torlock.unblockit.win)
+4. [TorrentDownloads](https://torrentdownloads.unblockit.win)

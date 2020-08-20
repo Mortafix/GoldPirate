@@ -15,15 +15,16 @@ from qbittorrent.client import LoginRequired
 from torrents.limetorrents import LimeTorrents
 from torrents.x1337 import X1337
 from torrents.torlock import TorLock
+from torrents.torrentdownloads import TorrentDownloads
 
-SITES = {'1337x':X1337(),'LimeTorrents':LimeTorrents(),'TorLock':TorLock()}
+SITES = {'1337x':X1337(),'LimeTorrents':LimeTorrents(),'TorLock':TorLock(),'TorrentDownloads':TorrentDownloads()}
 class Colors: 
 	BOLD='\x1b[1m'
 	GREEN,LGREEN = '\x1b[1m\x1b[32m','\x1b[0m\x1b[32m'
 	RED,LRED = '\x1b[1m\x1b[31m','\x1b[0m\x1b[31m'
 	BLUE,LBLUE = '\x1b[1m\x1b[34m','\x1b[0m\x1b[34m'
 	YELLOW,LYELLOW =  '\x1b[1m\x1b[33m','\x1b[0m\x1b[33m'
-	SITES = {'1337x':'\x1b[38;5;161m','LimeTorrents':'\x1b[38;5;48m','TorLock':'\x1b[38;5;123m'}
+	SITES = {'1337x':'\x1b[38;5;161m','LimeTorrents':'\x1b[38;5;48m','TorLock':'\x1b[38;5;123m','TorrentDownloads':'\x1b[38;5;202m'}
 	ENDC = '\033[0m'
 
 def read_config(cfg_path):
@@ -46,7 +47,7 @@ def print_torrents(torrents_list,size):
 	max_name_size = size-89 if size < 171 else -1
 	headers = ['Torrent','Category','Age','Seed','Leech','Size','Site']
 	table = [(	i+1 if i%2 == 0 else '{}{}{}'.format(Colors.BOLD,i+1,Colors.ENDC),
-				n[:max_name_size].encode('ascii', 'ignore').decode() if i%2 == 0 else '{}{}{}'.format(Colors.BOLD,n[:max_name_size].encode('ascii', 'ignore').decode(),Colors.ENDC),
+				n[:max_name_size].encode('ascii', 'ignore').decode().strip() if i%2 == 0 else '{}{}{}'.format(Colors.BOLD,n[:max_name_size].encode('ascii', 'ignore').decode().strip(),Colors.ENDC),
 				c if i%2 == 0 else '{}{}{}'.format(Colors.BOLD,c,Colors.ENDC),
 				'{}{}{}'.format(Colors.LYELLOW,a,Colors.ENDC) if i%2 == 0 else '{}{}{}'.format(Colors.YELLOW,a,Colors.ENDC),
 				'{}{}{}'.format(Colors.LGREEN,s,Colors.ENDC) if i%2 == 0 else '{}{}{}'.format(Colors.GREEN,s,Colors.ENDC),
