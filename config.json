@@ -1,6 +1,6 @@
 {
 	// folder where you want to download the torrents
-	"download-folder": "/tmp",
+	"download-folder": "/Users/Moris",
 
 	// defualt sort for the torrents list [age,size,seed,leech]
 	"defualt-sort": "seed"
