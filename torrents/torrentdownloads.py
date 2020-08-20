@@ -23,11 +23,12 @@ class TorrentDownloads:
 		search_list = self._search_torrents(query,sort)
 		torrents = list()
 		for torrent in search_list:
-			name = torrent.find('p').text
-			link_page = [a.get('href') for a in torrent.find('p').findAll('a')][0]
-			category = int(search(r'menu_icon(\d+)',torrent.find('p').find('img').get('src')).group(1))
-			leech,seed,size = [s.text for s in torrent.findAll('span') if s.text and not search('mail',s.text)]
-			torrents.append(['TorrentDownloads',name,link_page,'',self._get_category(category),sub(r'\xa0',' ',size),int(sub(',','',seed)),int(sub(',','',leech))])
+			if not search('No torrents',torrent.text):
+				name = torrent.find('p').text
+				link_page = [a.get('href') for a in torrent.find('p').findAll('a')][0]
+				category = int(search(r'menu_icon(\d+)',torrent.find('p').find('img').get('src')).group(1))
+				leech,seed,size = [s.text for s in torrent.findAll('span') if s.text and not search('mail',s.text)]
+				torrents.append(['TorrentDownloads',name,link_page,'',self._get_category(category),sub(r'\xa0',' ',size),int(sub(',','',seed)),int(sub(',','',leech))])
 		return torrents
 
 	def _get_category(self,cateogry_id):
