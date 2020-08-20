@@ -15,8 +15,6 @@ class LimeTorrents:
 
 	def _search_torrents(self,query,sort=None):
 		url_attach = sub('@@',self.sort_type[sort],sub('##',sub(r'\s',self.delimiter,query),self.sort)) if sort and sort in self.sort_type else sub('##',sub(r'\s',self.delimiter,query),self.search)
-		soup = bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@','1',self.page)),allow_redirects=True).text, 'html.parser')
-		pages = [int(x.text) for x in soup.find('div',class_='search_stat').findAll('a') if search(r'\d+',x.text)]; pages = max(pages) if pages else 1
 		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i+1),self.page)),allow_redirects=True).text, 'html.parser').findAll('td')[12:] for i in range(2)],[])
 
 	def build_list(self,query,sort=None):

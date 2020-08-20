@@ -16,8 +16,6 @@ class X1337:
 
 	def _search_torrents(self,query,sort=None):
 		url_attach = sub('@@',self.sort_type[sort],sub('##',sub(r'\s',self.delimiter,query),self.sort)) if sort and sort in self.sort_type else sub('##',sub(r'\s',self.delimiter,query),self.search)
-		soup = bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@','1',self.page)),headers=self.user_agent).text, 'html.parser')
-		pages = int(m.group()) if (p := soup.find('li',{'class':'last'})) and (m := search(r'\d+',p.find('a').get('href'))) else 1
 		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i),self.page)),headers=self.user_agent).text, 'html.parser').findAll('td') for i in range(2)],[])
 
 	def build_list(self,query,sort=None):
@@ -39,8 +37,7 @@ class X1337:
 
 	def _get_category(self,cateogry_id):
 		categories = {1: 'DVD', 2: 'Divx/Xvid', 3: 'SVCD/VCD', 4: 'Dubs/Dual Audio', 5: 'DVD', 6: 'Divx/Xvid', 7: 'SVCD/VCD', 9: 'Documentary', 10: 'PC Game', 11: 'PS2', 12: 'PSP', 13: 'Xbox', 14: 'Xbox360', 15: 'PS1', 16: 'Dreamcast', 18: 'PC Software', 19: 'Mac', 20: 'Linux', 22: 'MP3', 23: 'Lossless', 24: 'DVD', 25: 'Video', 26: 'Radio', 28: 'Anime', 33: 'Emulation', 34: 'Tutorials', 35: 'Sounds', 36: 'E-Books', 37: 'Images', 38: 'Mobile Phone', 39: 'Comics', 41: 'HD', 42: 'HD', 43: 'PS3', 44: 'Wii', 45: 'DS', 46: 'GameCube', 47: 'Nulled Script', 48: 'Video', 49: 'Picture', 50: 'Magazine', 51: 'Hentai', 52: 'Audiobook', 53: 'Album', 54: 'h.264/x264', 55: 'Mp4', 56: 'Android', 57: 'iOS', 58: 'Box Set', 59: 'Discography', 60: 'Single', 66: '3D', 67: 'Games', 68: 'Concerts', 69: 'AAC', 70: 'HEVC/x265', 71: 'HEVC/x265', 72: '3DS', 73: 'Bollywood', 74: 'Cartoon', 75: 'SD', 76: 'UHD', 77: 'PS4', 78: 'Dual Audio', 79: 'Dubbed', 80: 'Subbed', 81: 'Raw', 82: 'Switch'}
-		try: return categories[cateogry_id]
-		except IndexError: return 'Other' 
+		return categories[cateogry_id] if cateogry_id in categories else 'Other'
 
 	def get_magnet_link(self,torrent_page):
 		soup = soup = bs(requests.get('{}{}'.format(self.url,torrent_page),allow_redirects=True).text,'html.parser')
