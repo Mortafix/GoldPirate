@@ -7,7 +7,7 @@ Python script to download torrent from the Internet.
 The package can be downloaded directly from [Homebrew](https://brew.sh/index_it).
 ```bash
 brew tap Mortafix/GoldPirate
-brew install gold-pirate
+brew install goldpirate
 ```
 
 ## Setup QBitTorrent
