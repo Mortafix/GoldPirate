@@ -7,7 +7,7 @@ from functools import reduce
 
 class TorLock:
 	def __init__(self):
-		self.url = 'https://torlock.unblockit.win'
+		self.url = 'https://www.torlock.com'
 		self.search = '/all/torrents/##'
 		self.delimiter = '+'
 		self.sort = '/all/torrents/##.html?sort=@@&order=desc'
@@ -15,13 +15,12 @@ class TorLock:
 		self.page = '&page=@@'
 		self.user_agent = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36'}
 
-	def _search_torrents(self,query,sort=None):
+	def _search_torrents(self,query,pages,sort=None):
 		url_attach = sub('@@',self.sort_type[sort],sub('##',sub(r'\s',self.delimiter,query),self.sort)) if sort and sort in self.sort_type else sub('##',sub(r'\s',self.delimiter,query),self.search)
-		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i+1),self.page)),headers=self.user_agent).text, 'html.parser').findAll('td')[27:] for i in range(2)],[])
+		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i+1),self.page)),headers=self.user_agent).text, 'html.parser').findAll('td')[27:] for i in range(pages)],[])
 
-
-	def build_list(self,query,sort=None):
-		search_list = self._search_torrents(query,sort)
+	def build_list(self,query,pages,sort=None):
+		search_list = self._search_torrents(query,pages,sort)
 		singles = [search_list[i*6:i*6+6] for i in range(len(search_list)//6)]
 		torrents = list()
 		for torrent in singles:
@@ -38,9 +37,9 @@ class TorLock:
 		day,month,year = site_date.split('/')
 		return '{:02d}.{:02d}.{}'.format(int(month),int(day),int(year))
 
-	def _get_category(self,cateogry_id):
+	def _get_category(self,category_id):
 		categories = {1:'Movies',2:'Music',3:'Television',4:'Games',5:'Software',6:'Anime',7:'Adult',8:'E-Books',9:'Images',12:'Audio Books',0:'Other'}
-		return categories[cateogry_id] if cateogry_id in categories else 'Other' 
+		return categories[category_id] if category_id in categories else 'Other' 
 
 	def get_magnet_link(self,torrent_page):
 		soup = soup = bs(requests.get('{}{}'.format(self.url,torrent_page),allow_redirects=True).text,'html.parser')

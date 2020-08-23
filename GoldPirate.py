@@ -30,7 +30,7 @@ class Colors:
 def read_config(cfg_path):
 	with open(os.path.join(cfg_path,'config.json'), 'r') as cfg:
 		cfg_json = json.loads(''.join([l for l in [sub('\t|\n','',l) for l in cfg.readlines()] if l and l[0] != '/']))
-	return cfg_json['download-folder'],cfg_json['defualt-sort']
+	return cfg_json['download-folder'],cfg_json['defualt-sort'],cfg_json['total-result'],cfg_json['total-page']
 
 def change_configuration(cfg_path):
 	path = input('Download path [{}]: '.format(DOWN_PATH)).strip()
@@ -76,18 +76,18 @@ def download_from_qbittorrent(magnet_link):
 	qb.login()
 	qb.download_from_link(magnet_link,savepath=DOWN_PATH)
 
-def get_torrents(query,sort=None):
-	return reduce(lambda x,y: x+y,[obj.build_list(query,sort) for name,obj in SITES.items()],[])
+def get_torrents(query,pages,sort=None):
+	return reduce(lambda x,y: x+y,[obj.build_list(query,pages,sort) for name,obj in SITES.items()],[])
 
 if __name__ == '__main__':
 	SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-	DOWN_PATH,DEFAULT_SORT = read_config(SCRIPT_DIR)
+	DOWN_PATH,DEFAULT_SORT,LIMIT,PAGES = read_config(SCRIPT_DIR)
 	# parser 
 	parser = argparse.ArgumentParser(prog='gold-pirate',description='Do you want to be a pirate? It\'s FREE.',usage='gold-pirate -q QUERY [-s SORT]',epilog='Example: gold-pirate -q "Harry Potter Stone" -s size')
 	parser.add_argument('-q',type=str,help='query to search',metavar=('QUERY'))
 	parser.add_argument('-s',type=str,help='sort result [age,size,seed,leech]',metavar=('SORT'))
 	parser.add_argument('-c',action='store_true',help='change configuration')
-	parser.add_argument('-v','--version',help='script version',action='version',version='gold-pirate v1.2.0')
+	parser.add_argument('-v','--version',help='script version',action='version',version='gold-pirate v1.3.1')
 	args = parser.parse_args()
 	query = args.q
 	sort = args.s if args.s else DEFAULT_SORT
@@ -96,8 +96,8 @@ if __name__ == '__main__':
 	if DOWN_PATH == '/tmp' or config: change_configuration(SCRIPT_DIR); exit(-1)
 	if not query: print('usage: gold-pirate -q QUERY [-s SORT]'); exit(-1)
 	wind_size = get_terminal_window_size()
-	torrents = sort_all(get_torrents(query,sort),sort)
-	limit = len(torrents) if len(torrents) < 50 else 50
+	torrents = sort_all(get_torrents(query,PAGES,sort),sort)
+	limit = len(torrents) if len(torrents) < LIMIT else LIMIT
 	# download
 	if limit > 0 and torrents:
 		print_torrents(torrents[:limit],wind_size)

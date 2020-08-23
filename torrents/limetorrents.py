@@ -6,19 +6,19 @@ from functools import reduce
 
 class LimeTorrents:
 	def __init__(self):
-		self.url = 'https://limetorrents.unblockit.win'
+		self.url = 'https://limetorrents.info'
 		self.search = '/search/all/##'
 		self.delimiter = '-'
 		self.sort = '/search/all/##/@@'
 		self.sort_type = {'age':'date','size':'size','seed':'seeds','leech':'leechs'}
 		self.page = '/@@'
 
-	def _search_torrents(self,query,sort=None):
+	def _search_torrents(self,query,pages,sort=None):
 		url_attach = sub('@@',self.sort_type[sort],sub('##',sub(r'\s',self.delimiter,query),self.sort)) if sort and sort in self.sort_type else sub('##',sub(r'\s',self.delimiter,query),self.search)
-		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i+1),self.page)),allow_redirects=True).text, 'html.parser').findAll('td')[12:] for i in range(2)],[])
+		return reduce(lambda x,y:x+y,[bs(requests.get('{}{}{}'.format(self.url,url_attach,sub('@@',str(i+1),self.page)),allow_redirects=True).text, 'html.parser').findAll('td')[12:] for i in range(pages)],[])
 
-	def build_list(self,query,sort=None):
-		search_list = self._search_torrents(query,sort)
+	def build_list(self,query,pages,sort=None):
+		search_list = self._search_torrents(query,pages,sort)
 		singles = [search_list[i*6:i*6+6] for i in range(len(search_list)//6)]
 		torrents = list()
 		for torrent in singles:
