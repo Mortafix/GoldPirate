@@ -29,7 +29,7 @@ gold-pirate -q "Harry Potter" -s age
 ![alt text](https://github.com/mortafix/homebrew-goldpirate/blob/master/images/Example.png?raw=true)  
 
 ## Supported Sites
-1. [1337x](https://1337x.unblockit.win/)
-2. [LimeTorrents](https://limetorrents.unblockit.win/)
-3. [TorLock](https://torlock.unblockit.win)
-4. [TorrentDownloads](https://torrentdownloads.unblockit.win)
+1. [1337x](https://1337x.to/)
+2. [LimeTorrents](https://limetorrents.info/)
+3. [TorLock](https://torlock.com)
+4. [TorrentDownloads](https://torrentdownloads.me)
