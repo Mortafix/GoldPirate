@@ -25,7 +25,6 @@ class X1337:
 		for torrent in singles:
 			name = torrent[0].text
 			category,link_page = [a.get('href') for a in torrent[0].findAll('a')]
-			# /sub/movies/UHD/1/
 			category = search(r'sub\/(\w+)\/',category).group(1)
 			seed,leech,time,size = [t.text for t in torrent[1:5]]
 			torrents.append(['1337x',name,link_page,self._date_converter(time),category.title(),sub(r'\d+$','',size),int(sub(',','',seed)),int(sub(',','',leech))])

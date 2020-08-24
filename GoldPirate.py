@@ -64,7 +64,8 @@ def size_to_int(size):
 	if (s := search(r'([\d\.]+)\sGB',size)): return float(s.group(1)) * 1000 * 1000 * 1024
 	if (s := search(r'([\d\.]+)\sMB',size)): return float(s.group(1)) * 1000 * 1024
 	if (s := search(r'([\d\.]+)\sKB',size)): return float(s.group(1)) * 1024
-	if (s := search(r'([\d\.]+)\sbytes',size)): return float(s.group(1))
+	if (s := search(r'([\d\.]+)\sb',size)): return float(s.group(1))
+	return 0
 
 def sort_all(torrents,sort):
 	sort_type = {'size':(size_to_int,5),'seed':(int,6),'leech':(int,7)}
