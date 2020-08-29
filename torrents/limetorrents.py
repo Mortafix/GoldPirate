@@ -33,3 +33,6 @@ class LimeTorrents:
 		soup = soup = bs(requests.get('{}{}'.format(self.url,torrent_page),allow_redirects=True).text,'html.parser')
 		try: return [x.get('href') for x in soup.findAll('a',{'class':'csprite_dltorrent'}) if search('magnet',x.get('href'))][0]
 		except IndexError: return None
+
+	def get_torrent_page(self,torrent_page):
+		return f'{self.url}{torrent_page}'

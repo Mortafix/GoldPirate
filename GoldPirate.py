@@ -19,12 +19,13 @@ from torrents.torrentdownloads import TorrentDownloads
 
 SITES = {'1337x':X1337(),'LimeTorrents':LimeTorrents(),'TorLock':TorLock(),'TorrentDownloads':TorrentDownloads()}
 class Colors: 
-	BOLD='\x1b[1m'
+	BOLD,UNDERLINE = '\x1b[1m','\x1b[4m'
 	GREEN,LGREEN = '\x1b[1m\x1b[32m','\x1b[0m\x1b[32m'
 	RED,LRED = '\x1b[1m\x1b[31m','\x1b[0m\x1b[31m'
 	BLUE,LBLUE = '\x1b[1m\x1b[34m','\x1b[0m\x1b[34m'
 	YELLOW,LYELLOW =  '\x1b[1m\x1b[33m','\x1b[0m\x1b[33m'
 	SITES = {'1337x':'\x1b[38;5;161m','LimeTorrents':'\x1b[38;5;48m','TorLock':'\x1b[38;5;123m','TorrentDownloads':'\x1b[38;5;202m'}
+	MENU = '\x1b[38;5;230m'
 	ENDC = '\033[0m'
 
 def read_config(cfg_path):
@@ -88,11 +89,13 @@ if __name__ == '__main__':
 	parser.add_argument('-q',type=str,help='query to search',metavar=('QUERY'))
 	parser.add_argument('-s',type=str,help='sort result [age,size,seed,leech]',metavar=('SORT'))
 	parser.add_argument('-c',action='store_true',help='change configuration')
+	parser.add_argument('-V','--verbose',action='store_true',help='print torrent page and magnet link')
 	parser.add_argument('-v','--version',help='script version',action='version',version='gold-pirate v1.3.1')
 	args = parser.parse_args()
 	query = args.q
 	sort = args.s if args.s else DEFAULT_SORT
 	config = args.c
+	verbose = args.verbose
 	# search
 	if DOWN_PATH == '/tmp' or config: change_configuration(SCRIPT_DIR); exit(-1)
 	if not query: print('usage: gold-pirate -q QUERY [-s SORT]'); exit(-1)
@@ -103,14 +106,18 @@ if __name__ == '__main__':
 	if limit > 0 and torrents:
 		print_torrents(torrents[:limit],wind_size)
 		while True:
-			while (inp := int(input(f'Select a torrent to download [0:exit]: '))) not in range(limit+1): pass
+			while (inp := int(input(f'> Select a torrent to download {Colors.BOLD}[0:exit]{Colors.ENDC}: '))) not in range(limit+1): pass
 			if inp == 0: exit(-1)
 			link_torrent = torrents[inp-1][2]
 			magnet = SITES[torrents[inp-1][0]].get_magnet_link(link_torrent)
+			torrent_page = SITES[torrents[inp-1][0]].get_torrent_page(link_torrent)
 			if magnet:
 				try: 
+					if (verbose):
+						print(f'\n{Colors.MENU}Torrent page{Colors.ENDC}\n{Colors.UNDERLINE}{torrent_page}{Colors.ENDC}\n\n{Colors.MENU}Magnet link{Colors.ENDC}\n{Colors.UNDERLINE}{magnet}{Colors.ENDC}\n')
 					download_from_qbittorrent(magnet)
-					print('Torrent successfully sent to QBitTorrent!'); print()
-				except ConnectionError: print('Open QBitTorrent. If it\'s already open, check the configuration.')
-			else: print('Magnet link not found..')
-	else: print('No torrent found for \'{}\'.'.format(query))
+					print(f'{Colors.GREEN}Torrent successfully sent to QBitTorrent!{Colors.ENDC}\n')
+				except ConnectionError: print(f'{Colors.RED}Open QBitTorrent. If it\'s already open, check the configuration.{Colors.ENDC}\n')
+				except RuntimeError: print(f'{Colors.RED}Unable to find QBitTorrent on localhost.{Colors.ENDC}\n')
+			else: print(f'{Colors.RED}Magnet link not found.{Colors.ENDC}\n')
+	else: print(f'{Colors.RED}No torrent found for \'{query}\'.{Colors.ENDC}')

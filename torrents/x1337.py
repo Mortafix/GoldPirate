@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup as bs
 from re import search,sub
 from time import sleep
+from datetime import datetime
 from functools import reduce
 
 class X1337:
@@ -31,6 +32,7 @@ class X1337:
 		return torrents
 
 	def _date_converter(self,site_date):
+		if search(r'\d\d:\d\d',site_date): return datetime.now().strftime('%d.%m.%Y')
 		month,day,year = site_date.split()
 		months = {'Jan.':1,'Feb.':2,'Mar.':3,'Apr.':4,'May.':5,'Jun.':6,'Jul.':7,'Aug.':8,'Sep.':9,'Oct.':10,'Nov.':11,'Dec.':12}
 		return '{:02d}.{:02d}.20{}'.format(int(sub(r'\D+','',day)),months[month],year[1:]) if not search('(am|pm)',site_date) else '{}.{}.2020'.format(months[day],int(sub(r'\D+','',year)))
@@ -39,3 +41,6 @@ class X1337:
 		soup = soup = bs(requests.get('{}{}'.format(self.url,torrent_page),allow_redirects=True).text,'html.parser')
 		try: return [a.get('href') for a in soup.findAll('a') if search('magnet',a.get('href'))][0]
 		except IndexError: return None
+
+	def get_torrent_page(self,torrent_page):
+		return f'{self.url}{torrent_page}'

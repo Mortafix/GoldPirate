@@ -45,3 +45,6 @@ class TorLock:
 		soup = soup = bs(requests.get('{}{}'.format(self.url,torrent_page),allow_redirects=True).text,'html.parser')
 		try: return [a.get('href') for a in soup.findAll('a') if search('magnet',str(a.get('href')))][0]
 		except IndexError: return None
+
+	def get_torrent_page(self,torrent_page):
+		return f'{self.url}{torrent_page}'
