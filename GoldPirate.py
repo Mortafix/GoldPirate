@@ -90,7 +90,7 @@ if __name__ == '__main__':
 	parser.add_argument('-s',type=str,help='sort result [age,size,seed,leech]',metavar=('SORT'))
 	parser.add_argument('-c',action='store_true',help='change configuration')
 	parser.add_argument('-V','--verbose',action='store_true',help='print torrent page and magnet link')
-	parser.add_argument('-v','--version',help='script version',action='version',version='gold-pirate v1.3.1')
+	parser.add_argument('-v','--version',help='script version',action='version',version='gold-pirate v1.3.2')
 	args = parser.parse_args()
 	query = args.q
 	sort = args.s if args.s else DEFAULT_SORT
