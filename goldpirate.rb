@@ -4,9 +4,9 @@ class Goldpirate < Formula
 
   desc "A command line script for downloading torrent"
   homepage "https://github.com/Mortafix/homebrew-GoldPirate"
-  url "https://github.com/Mortafix/homebrew-GoldPirate/archive/v1.3.2.tar.gz"
-  sha256 "91671f0d08cafcfa9d6ce1a143d2695025a78ecbadc05a37a5fca4e7cec8a942"
-  version "1.3.2"
+  url "https://github.com/Mortafix/homebrew-GoldPirate/archive/v1.4.0.tar.gz"
+  sha256 "39f6bbd0e3dc915dd116192bce05e1ea5802ed3f669ee82d763e1a53a84f7097"
+  version "1.4.0"
 
   depends_on "python3"
 
@@ -77,6 +77,7 @@ class Goldpirate < Formula
     (libexec/"bin"/"torrents").install "torrents/limetorrents.py"
     (libexec/"bin"/"torrents").install "torrents/torlock.py"
     (libexec/"bin"/"torrents").install "torrents/torrentdownloads.py"
+    (libexec/"bin"/"torrents").install "torrents/corsaronero.py"
 
     # Final Script
     (libexec/"bin").install "GoldPirate.py" => "gold-pirate"
