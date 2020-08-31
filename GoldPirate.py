@@ -16,15 +16,16 @@ from torrents.limetorrents import LimeTorrents
 from torrents.x1337 import X1337
 from torrents.torlock import TorLock
 from torrents.torrentdownloads import TorrentDownloads
+from torrents.corsaronero import CorsaroNero
 
-SITES = {'1337x':X1337(),'LimeTorrents':LimeTorrents(),'TorLock':TorLock(),'TorrentDownloads':TorrentDownloads()}
+SITES = {'1337x':X1337(),'LimeTorrents':LimeTorrents(),'TorLock':TorLock(),'TorrentDownloads':TorrentDownloads(),'CorsaroNero':CorsaroNero()}
 class Colors: 
 	BOLD,UNDERLINE = '\x1b[1m','\x1b[4m'
 	GREEN,LGREEN = '\x1b[1m\x1b[32m','\x1b[0m\x1b[32m'
 	RED,LRED = '\x1b[1m\x1b[31m','\x1b[0m\x1b[31m'
 	BLUE,LBLUE = '\x1b[1m\x1b[34m','\x1b[0m\x1b[34m'
 	YELLOW,LYELLOW =  '\x1b[1m\x1b[33m','\x1b[0m\x1b[33m'
-	SITES = {'1337x':'\x1b[38;5;161m','LimeTorrents':'\x1b[38;5;48m','TorLock':'\x1b[38;5;123m','TorrentDownloads':'\x1b[38;5;202m'}
+	SITES = {'1337x':'\x1b[38;5;161m','LimeTorrents':'\x1b[38;5;48m','TorLock':'\x1b[38;5;123m','TorrentDownloads':'\x1b[38;5;202m','CorsaroNero':'\x1b[38;5;239m'}
 	MENU = '\x1b[38;5;230m'
 	ENDC = '\033[0m'
 
@@ -90,7 +91,7 @@ if __name__ == '__main__':
 	parser.add_argument('-s',type=str,help='sort result [age,size,seed,leech]',metavar=('SORT'))
 	parser.add_argument('-c',action='store_true',help='change configuration')
 	parser.add_argument('-V','--verbose',action='store_true',help='print torrent page and magnet link')
-	parser.add_argument('-v','--version',help='script version',action='version',version='gold-pirate v1.3.2')
+	parser.add_argument('-v','--version',help='script version',action='version',version='gold-pirate v1.4.0')
 	args = parser.parse_args()
 	query = args.q
 	sort = args.s if args.s else DEFAULT_SORT

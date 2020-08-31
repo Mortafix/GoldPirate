@@ -33,3 +33,4 @@ gold-pirate -q "Harry Potter" -s age
 2. [LimeTorrents](https://limetorrents.info/)
 3. [TorLock](https://torlock.com)
 4. [TorrentDownloads](https://torrentdownloads.me)
+4. [IlCorsaroNero](https://ilcorsaronero.link)
