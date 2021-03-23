@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from functools import reduce
 from re import search, sub
-from time import sleep
 
 import requests
 from bs4 import BeautifulSoup as bs
@@ -53,7 +52,7 @@ class TorLock:
 
     def build_list(self, query, pages, sort=None):
         search_list = self._search_torrents(query, pages, sort)
-        singles = [search_list[i * 6 : i * 6 + 6] for i in range(len(search_list) // 6)]
+        singles = [search_list[i * 7 : i * 7 + 7] for i in range(len(search_list) // 7)]
         torrents = list()
         for torrent in singles:
             name = torrent[0].text
