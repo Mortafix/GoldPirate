@@ -96,11 +96,3 @@ class CorsaroNero:
 
     def get_torrent_page(self, torrent_page):
         return f"{self.url}{torrent_page}"
-
-
-if __name__ == "__main__":
-    cn = CorsaroNero()
-    l = cn.build_list("Harry Potter pietra", 2, sort="size")
-    print(l)
-    m = cn.get_magnet_link(l[0][2])
-    print(m)
