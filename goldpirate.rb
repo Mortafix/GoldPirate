@@ -5,7 +5,7 @@ class Goldpirate < Formula
   desc "A command line script for downloading torrent"
   homepage "https://github.com/Mortafix/homebrew-GoldPirate"
   url "https://github.com/Mortafix/homebrew-GoldPirate/archive/v1.4.1.tar.gz"
-  sha256 "60824dbcd086acc3c8542e04e695299072dd50ff43605b948f39476c17da4211"
+  sha256 "4334c6eae27ff3fae6f5e69914872fe24b21a0d4499a9380001a46eadb040490"
   version "1.4.1"
 
   depends_on "python3"
