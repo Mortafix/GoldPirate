@@ -6,15 +6,15 @@ from re import search
 from subprocess import check_output
 
 from colorifix.colorifix import erase, paint, ppaint
+from goldpirate.torrents.corsaronero import CorsaroNero
+from goldpirate.torrents.limetorrents import LimeTorrents
+from goldpirate.torrents.torlock import TorLock
+from goldpirate.torrents.torrentdownloads import TorrentDownloads
+from goldpirate.torrents.x1337 import X1337
 from halo import Halo
 from qbittorrent import Client, client
 from requests.exceptions import ConnectionError
 from tabulate import tabulate
-from torrents.corsaronero import CorsaroNero
-from torrents.limetorrents import LimeTorrents
-from torrents.torlock import TorLock
-from torrents.torrentdownloads import TorrentDownloads
-from torrents.x1337 import X1337
 
 SITES = {
     "1337x": X1337(),
@@ -35,8 +35,8 @@ COLORS = {
 # ---- Configuration
 
 
-def read_config():
-    with open(path.join(SCRIPT_DIR, "config.json")) as file:
+def read_config(script_dir):
+    with open(path.join(script_dir, "config.json")) as file:
         settings_str = [
             line
             for line in file.read().split("\n")
@@ -47,13 +47,13 @@ def read_config():
     return (config.get(label) for label in labels)
 
 
-def change_configuration():
-    cfg_path = input("Download path:\n").strip() or DOWN_PATH
+def change_configuration(script_dir, down_path):
+    cfg_path = input("Download path:\n").strip() or down_path
     while not path.exists(cfg_path) or cfg_path == "/tmp":
         erase()
-        cfg_path = input(paint("[#red]Folder not exists.[/] Retry: ")) or DOWN_PATH
-    for line in finput(path.join(SCRIPT_DIR, "config.json"), inplace=1):
-        print(line.replace(DOWN_PATH, cfg_path), end="")
+        cfg_path = input(paint("[#red]Folder not exists.[/] Retry: ")) or down_path
+    for line in finput(path.join(script_dir, "config.json"), inplace=1):
+        print(line.replace(down_path, cfg_path), end="")
     ppaint("[#green]Successful! New configuration saved correctly.")
 
 
@@ -118,10 +118,10 @@ def sort_all(torrents, sort):
     )
 
 
-def download_from_qbittorrent(magnet_link):
+def download_from_qbittorrent(magnet_link, down_path):
     qb = Client("http://127.0.0.1:8080/")
     qb.login()
-    qb.download_from_link(magnet_link, savepath=DOWN_PATH)
+    qb.download_from_link(magnet_link, savepath=down_path)
 
 
 def get_torrents(query, pages, sort=None):
@@ -135,9 +135,10 @@ def get_torrents(query, pages, sort=None):
 
 # ---- Main
 
-if __name__ == "__main__":
+
+def main():
     SCRIPT_DIR = path.dirname(path.realpath(__file__))
-    DOWN_PATH, DEFAULT_SORT, LIMIT, PAGES = read_config()
+    DOWN_PATH, DEFAULT_SORT, LIMIT, PAGES = read_config(SCRIPT_DIR)
     # parser
     parser = ArgumentParser(
         prog="gold-pirate",
@@ -172,7 +173,7 @@ if __name__ == "__main__":
     verbose = args.verbose
     # search
     if DOWN_PATH == "/tmp" or config:
-        change_configuration()
+        change_configuration(SCRIPT_DIR, DOWN_PATH)
         exit(-1)
     torrents = sort_all(get_torrents(query, PAGES, sort), sort)
     limit = len(torrents) if len(torrents) < LIMIT else LIMIT
@@ -193,7 +194,7 @@ if __name__ == "__main__":
                 try:
                     if verbose:
                         ppaint(f"\n[#gray]{torrent_page}[/]\n[@underline]{magnet}[/]\n")
-                    download_from_qbittorrent(magnet)
+                    download_from_qbittorrent(magnet, DOWN_PATH)
                     ppaint("[#green]Torrent successfully sent to QBitTorrent![/]\n")
                 except ConnectionError:
                     ppaint("[#red]QBitTorrent is not open.[/]\n")
@@ -205,3 +206,7 @@ if __name__ == "__main__":
                 ppaint("[#red]Magnet link not found.[/]\n")
     else:
         ppaint(f"[#red]No torrent found for [@underline @bold]{query}[/@].[/]")
+
+
+if __name__ == "__main__":
+    main()
