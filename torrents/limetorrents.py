@@ -3,6 +3,7 @@ from re import search, sub
 
 import requests
 from bs4 import BeautifulSoup as bs
+from requests.exceptions import ConnectTimeout
 
 
 class LimeTorrents:
@@ -38,6 +39,7 @@ class LimeTorrents:
                             self.url, url_attach, sub("@@", str(i + 1), self.page)
                         ),
                         allow_redirects=True,
+                        timeout=3,
                     ).text,
                     "html.parser",
                 ).findAll("td")[12:]
@@ -47,7 +49,10 @@ class LimeTorrents:
         )
 
     def build_list(self, query, pages, sort=None):
-        search_list = self._search_torrents(query, pages, sort)
+        try:
+            search_list = self._search_torrents(query, pages, sort)
+        except ConnectTimeout:
+            return []
         singles = [search_list[i * 6 : i * 6 + 6] for i in range(len(search_list) // 6)]
         torrents = list()
         for torrent in singles:

@@ -1,15 +1,13 @@
-#!/usr/bin/env python3
-# Author: Moris Doratiotto
+from argparse import ArgumentParser
+from fileinput import input as finput
+from json import loads
+from os import path
+from re import search
+from subprocess import check_output
 
-import argparse
-import fileinput
-import json
-import os
-import subprocess
-from functools import reduce
-from re import search, sub
-
-from qbittorrent import Client
+from colorifix.colorifix import erase, paint, ppaint
+from halo import Halo
+from qbittorrent import Client, client
 from requests.exceptions import ConnectionError
 from tabulate import tabulate
 from torrents.corsaronero import CorsaroNero
@@ -25,126 +23,94 @@ SITES = {
     "TorrentDownloads": TorrentDownloads(),
     "CorsaroNero": CorsaroNero(),
 }
+COLORS = {
+    "1337x": 161,
+    "LimeTorrents": 48,
+    "TorLock": 123,
+    "TorrentDownloads": 202,
+    "CorsaroNero": 239,
+}
 
 
-class Colors:
-    BOLD, UNDERLINE = "\x1b[1m", "\x1b[4m"
-    GREEN, LGREEN = "\x1b[1m\x1b[32m", "\x1b[0m\x1b[32m"
-    RED, LRED = "\x1b[1m\x1b[31m", "\x1b[0m\x1b[31m"
-    BLUE, LBLUE = "\x1b[1m\x1b[34m", "\x1b[0m\x1b[34m"
-    YELLOW, LYELLOW = "\x1b[1m\x1b[33m", "\x1b[0m\x1b[33m"
-    SITES = {
-        "1337x": "\x1b[38;5;161m",
-        "LimeTorrents": "\x1b[38;5;48m",
-        "TorLock": "\x1b[38;5;123m",
-        "TorrentDownloads": "\x1b[38;5;202m",
-        "CorsaroNero": "\x1b[38;5;239m",
-    }
-    MENU = "\x1b[38;5;230m"
-    ENDC = "\033[0m"
+# ---- Configuration
 
 
-def read_config(cfg_path):
-    with open(os.path.join(cfg_path, "config.json"), "r") as cfg:
-        cfg_json = json.loads(
-            "".join(
-                [
-                    l
-                    for l in [sub("\t|\n", "", l) for l in cfg.readlines()]
-                    if l and l[0] != "/"
-                ]
-            )
-        )
-    return (
-        cfg_json["download-folder"],
-        cfg_json["defualt-sort"],
-        cfg_json["total-result"],
-        cfg_json["total-page"],
-    )
+def read_config():
+    with open(path.join(SCRIPT_DIR, "config.json")) as file:
+        settings_str = [
+            line
+            for line in file.read().split("\n")
+            if line and line.strip()[:2] != "//"
+        ]
+    config = loads("".join(settings_str))
+    labels = ("download-folder", "defualt-sort", "total-result", "total-page")
+    return (config.get(label) for label in labels)
 
 
-def change_configuration(cfg_path):
-    path = input("Download path [{}]: ".format(DOWN_PATH)).strip()
-    path = path if path else DOWN_PATH
-    while not os.path.exists(path) or path == "/tmp":
-        path = input("Folder not exists. Retry: ")
-        path = path if path else DOWN_PATH
-    if path != DOWN_PATH:
-        for line in fileinput.input(os.path.join(SCRIPT_DIR, "config.json"), inplace=1):
-            print(line.replace(DOWN_PATH, path), end="")
-        print("Successful! New configuration saved correctly.")
+def change_configuration():
+    cfg_path = input("Download path:\n").strip() or DOWN_PATH
+    while not path.exists(cfg_path) or cfg_path == "/tmp":
+        erase()
+        cfg_path = input(paint("[#red]Folder not exists.[/] Retry: ")) or DOWN_PATH
+    for line in finput(path.join(SCRIPT_DIR, "config.json"), inplace=1):
+        print(line.replace(DOWN_PATH, cfg_path), end="")
+    ppaint("[#green]Successful! New configuration saved correctly.")
 
 
-def print_torrents(torrents_list, size):
-    max_name_size = size - 89 if size < 171 else -1
-    headers = ["Torrent", "Category", "Age", "Seed", "Leech", "Size", "Site"]
-    table = [
-        (
-            i + 1 if i % 2 == 0 else "{}{}{}".format(Colors.BOLD, i + 1, Colors.ENDC),
-            n[:max_name_size].encode("ascii", "ignore").decode().strip()
-            if i % 2 == 0
-            else "{}{}{}".format(
-                Colors.BOLD,
-                n[:max_name_size].encode("ascii", "ignore").decode().strip(),
-                Colors.ENDC,
-            ),
-            c if i % 2 == 0 else "{}{}{}".format(Colors.BOLD, c, Colors.ENDC),
-            "{}{}{}".format(Colors.LYELLOW, a, Colors.ENDC)
-            if i % 2 == 0
-            else "{}{}{}".format(Colors.YELLOW, a, Colors.ENDC),
-            "{}{}{}".format(Colors.LGREEN, s, Colors.ENDC)
-            if i % 2 == 0
-            else "{}{}{}".format(Colors.GREEN, s, Colors.ENDC),
-            "{}{}{}".format(Colors.LRED, l, Colors.ENDC)
-            if i % 2 == 0
-            else "{}{}{}".format(Colors.RED, l, Colors.ENDC),
-            "{}{}{}".format(Colors.LBLUE, sub(r"(\.\d)\d", r"\1", si), Colors.ENDC)
-            if i % 2 == 0
-            else "{}{}{}".format(Colors.BLUE, sub(r"(\.\d)\d", r"\1", si), Colors.ENDC),
-            "{}{}{}".format(Colors.SITES[site], site, Colors.ENDC),
-        )
-        for i, (site, n, _, a, c, si, s, l) in enumerate(torrents_list)
-    ]
-    print(
-        tabulate(
-            table,
-            headers=headers,
-            tablefmt="psql",
-            showindex=0,
-            colalign=(
-                "right",
-                "left",
-                "left",
-                "left",
-                "right",
-                "right",
-                "right",
-                "left",
-            ),
-        )
-    )
+# ---- Utils
 
 
 def get_terminal_window_size():
-    return int(subprocess.check_output(["stty", "size"]).split()[1].decode())
+    return int(check_output(["stty", "size"]).split()[1].decode())
 
 
-def size_to_int(size):
-    if (s := search(r"([\d\.]+)\sTB", size)) :
-        return float(s.group(1)) * 1000 * 1000 * 1000 * 1024
-    if (s := search(r"([\d\.]+)\sGB", size)) :
-        return float(s.group(1)) * 1000 * 1000 * 1024
-    if (s := search(r"([\d\.]+)\sMB", size)) :
-        return float(s.group(1)) * 1000 * 1024
-    if (s := search(r"([\d\.]+)\sKB", size)) :
-        return float(s.group(1)) * 1024
-    if (s := search(r"([\d\.]+)\sb", size)) :
-        return float(s.group(1))
-    return 0
+def sanitize_str(string):
+    return string.encode("ascii", "ignore").decode().strip()
+
+
+def human_size(size):
+    units = {"KB": 0, "MB": 3, "GB": 6, "TB": 9}
+    match_size = search(r"([\d\.]+)\s+(KB|MB|GB|TB)", size)
+    if not match_size:
+        return 0
+    size_float, unit = match_size.groups()
+    return float(size_float) * 1000 ** units.get(unit) * 1024
+
+
+# ---- Torrents
+
+
+def print_torrents(torrents, window_size):
+    max_name_size = window_size - 89 if window_size < 171 else -1
+    table_torrents = [
+        (
+            i + 1,
+            sanitize_str(name[:max_name_size]),
+            category,
+            f"[#yellow]{age}[/]",
+            f"[#blue]{size}[/]",
+            f"[#green]{seed}[/]",
+            f"[#red]{leech}[/]",
+            f"[#{COLORS.get(site)}]{site}[/]",
+        )
+        for i, (site, name, _, age, category, size, seed, leech) in enumerate(torrents)
+    ]
+    table_torrents = [
+        [paint(("", "[@bold]")[i % 2] + f"{field}[/]") for field in line]
+        for i, line in enumerate(table_torrents)
+    ]
+    table = tabulate(
+        table_torrents,
+        headers=["Torrent", "Category", "Age", "Size", "Seed", "Leech", "Site"],
+        tablefmt="psql",
+        showindex=0,
+        colalign=("right", "left", "left", "left", "right", "right", "right", "left"),
+    )
+    print(table)
 
 
 def sort_all(torrents, sort):
-    sort_type = {"size": (size_to_int, 5), "seed": (int, 6), "leech": (int, 7)}
+    sort_type = {"size": (human_size, 5), "seed": (int, 6), "leech": (int, 7)}
     if not sort or sort not in sort_type:
         return torrents
     return sorted(
@@ -159,24 +125,29 @@ def download_from_qbittorrent(magnet_link):
 
 
 def get_torrents(query, pages, sort=None):
-    return reduce(
-        lambda x, y: x + y,
-        [obj.build_list(query, pages, sort) for name, obj in SITES.items()],
-        [],
-    )
+    torrents = list()
+    for name, site in SITES.items():
+        with Halo(text=paint(f"Scanning [#blue]{name}[/]"), spinner="dots"):
+            site_torrents = site.build_list(query, pages, sort)
+            torrents.extend(site_torrents)
+    return torrents
 
+
+# ---- Main
 
 if __name__ == "__main__":
-    SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-    DOWN_PATH, DEFAULT_SORT, LIMIT, PAGES = read_config(SCRIPT_DIR)
+    SCRIPT_DIR = path.dirname(path.realpath(__file__))
+    DOWN_PATH, DEFAULT_SORT, LIMIT, PAGES = read_config()
     # parser
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         prog="gold-pirate",
         description="Do you want to be a pirate? It's FREE.",
         usage="gold-pirate -q QUERY [-s SORT]",
         epilog='Example: gold-pirate -q "Harry Potter Stone" -s size',
     )
-    parser.add_argument("-q", type=str, help="query to search", metavar=("QUERY"))
+    parser.add_argument(
+        "-q", type=str, help="query to search", metavar=("QUERY"), required=True
+    )
     parser.add_argument(
         "-s", type=str, help="sort result [age,size,seed,leech]", metavar=("SORT")
     )
@@ -201,50 +172,36 @@ if __name__ == "__main__":
     verbose = args.verbose
     # search
     if DOWN_PATH == "/tmp" or config:
-        change_configuration(SCRIPT_DIR)
+        change_configuration()
         exit(-1)
-    if not query:
-        print("usage: gold-pirate -q QUERY [-s SORT]")
-        exit(-1)
-    wind_size = get_terminal_window_size()
     torrents = sort_all(get_torrents(query, PAGES, sort), sort)
     limit = len(torrents) if len(torrents) < LIMIT else LIMIT
     # download
     if limit > 0 and torrents:
-        print_torrents(torrents[:limit], wind_size)
+        print_torrents(torrents[:limit], get_terminal_window_size())
         while True:
-            while (
-                inp := int(
-                    input(
-                        f"> Select a torrent to download {Colors.BOLD}[0:exit]{Colors.ENDC}: "
-                    )
-                )
-            ) not in range(limit + 1):
-                pass
-            if inp == 0:
+            torr_idx = input(paint("> Select a torrent [@bold][0:exit][/]: "))
+            while not torr_idx.isdigit() or not int(torr_idx) in range(limit + 1):
+                torr_idx = input(paint("> Select a torrent [@bold][0:exit][/]: "))
+            torr_idx = int(torr_idx)
+            if torr_idx == 0:
                 exit(-1)
-            link_torrent = torrents[inp - 1][2]
-            magnet = SITES[torrents[inp - 1][0]].get_magnet_link(link_torrent)
-            torrent_page = SITES[torrents[inp - 1][0]].get_torrent_page(link_torrent)
+            torr_link = torrents[torr_idx - 1][2]
+            magnet = SITES[torrents[torr_idx - 1][0]].get_magnet_link(torr_link)
+            torrent_page = SITES[torrents[torr_idx - 1][0]].get_torrent_page(torr_link)
             if magnet:
                 try:
                     if verbose:
-                        print(
-                            f"\n{Colors.MENU}Torrent page{Colors.ENDC}\n{Colors.UNDERLINE}{torrent_page}{Colors.ENDC}\n\n{Colors.MENU}Magnet link{Colors.ENDC}\n{Colors.UNDERLINE}{magnet}{Colors.ENDC}\n"
-                        )
+                        ppaint(f"\n[#gray]{torrent_page}[/]\n[@underline]{magnet}[/]\n")
                     download_from_qbittorrent(magnet)
-                    print(
-                        f"{Colors.GREEN}Torrent successfully sent to QBitTorrent!{Colors.ENDC}\n"
-                    )
+                    ppaint("[#green]Torrent successfully sent to QBitTorrent![/]\n")
                 except ConnectionError:
-                    print(
-                        f"{Colors.RED}Open QBitTorrent. If it's already open, check the configuration.{Colors.ENDC}\n"
-                    )
+                    ppaint("[#red]QBitTorrent is not open.[/]\n")
                 except RuntimeError:
-                    print(
-                        f"{Colors.RED}Unable to find QBitTorrent on localhost.{Colors.ENDC}\n"
-                    )
+                    ppaint("[#red]Unable to find QBitTorrent on localhost.[/]\n")
+                except client.LoginRequired:
+                    ppaint("[#red]Turn off QBitTorrent authentication.[/]\n")
             else:
-                print(f"{Colors.RED}Magnet link not found.{Colors.ENDC}\n")
+                ppaint("[#red]Magnet link not found.[/]\n")
     else:
-        print(f"{Colors.RED}No torrent found for '{query}'.{Colors.ENDC}")
+        ppaint(f"[#red]No torrent found for [@underline @bold]{query}[/@].[/]")

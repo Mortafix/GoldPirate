@@ -4,6 +4,7 @@ from re import search, sub
 
 import requests
 from bs4 import BeautifulSoup as bs
+from requests.exceptions import ConnectTimeout
 
 
 class TorLock:
@@ -42,6 +43,7 @@ class TorLock:
                             self.url, url_attach, sub("@@", str(i + 1), self.page)
                         ),
                         headers=self.user_agent,
+                        timeout=3,
                     ).text,
                     "html.parser",
                 ).findAll("td")[27:]
@@ -51,26 +53,30 @@ class TorLock:
         )
 
     def build_list(self, query, pages, sort=None):
-        search_list = self._search_torrents(query, pages, sort)
+        try:
+            search_list = self._search_torrents(query, pages, sort)
+        except ConnectTimeout:
+            return []
         singles = [search_list[i * 7 : i * 7 + 7] for i in range(len(search_list) // 7)]
         torrents = list()
         for torrent in singles:
             name = torrent[0].text
-            link_page = [a.get("href") for a in torrent[0].findAll("a")][0]
-            category = int(torrent[0].find("span").get("class")[0][2:])
-            time, size, seed, leech = [t.text for t in torrent[1:5]]
-            torrents.append(
-                [
-                    "TorLock",
-                    name,
-                    link_page,
-                    self._date_converter(time),
-                    self._get_category(category),
-                    sub(r"\d+$", "", size),
-                    int(sub(",", "", seed)),
-                    int(sub(",", "", leech)),
-                ]
-            )
+            link_page = [a.get("href") for a in torrent[0].findAll("a")]
+            if link_page:
+                category = int(torrent[0].find("span").get("class")[0][2:])
+                time, size, seed, leech = [t.text for t in torrent[1:5]]
+                torrents.append(
+                    [
+                        "TorLock",
+                        name,
+                        link_page[0],
+                        self._date_converter(time),
+                        self._get_category(category),
+                        sub(r"\d+$", "", size),
+                        int(sub(",", "", seed)),
+                        int(sub(",", "", leech)),
+                    ]
+                )
         return torrents
 
     def _date_converter(self, site_date):

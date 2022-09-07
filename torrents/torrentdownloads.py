@@ -3,6 +3,7 @@ from re import search, sub
 
 import requests
 from bs4 import BeautifulSoup as bs
+from requests.exceptions import ConnectTimeout
 
 
 class TorrentDownloads:
@@ -28,6 +29,7 @@ class TorrentDownloads:
                             self.url, url_attach, sub("@@", str(i + 1), self.page)
                         ),
                         headers=self.user_agent,
+                        timeout=3,
                     ).text,
                     "html.parser",
                 ).findAll("div", {"class": "grey_bar3"})[6:-1]
@@ -37,7 +39,10 @@ class TorrentDownloads:
         )
 
     def build_list(self, query, pages, sort=None):
-        search_list = self._search_torrents(query, pages, sort)
+        try:
+            search_list = self._search_torrents(query, pages, sort)
+        except ConnectTimeout:
+            return []
         torrents = list()
         for torrent in search_list:
             if not search("No torrents", torrent.text):

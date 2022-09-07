@@ -3,6 +3,7 @@ from re import search, sub
 
 import requests
 from bs4 import BeautifulSoup as bs
+from requests.exceptions import ConnectTimeout
 
 
 class CorsaroNero:
@@ -41,6 +42,7 @@ class CorsaroNero:
                             self.url, url_attach, sub("@@", str(i), self.page)
                         ),
                         headers=self.user_agent,
+                        timeout=3,
                     ).text,
                     "html.parser",
                 ).findAll("td")[18:-3]
@@ -50,7 +52,10 @@ class CorsaroNero:
         )
 
     def build_list(self, query, pages, sort=None):
-        search_list = self._search_torrents(query, pages, sort)
+        try:
+            search_list = self._search_torrents(query, pages, sort)
+        except ConnectTimeout:
+            return []
         search_list = [x for x in search_list if x.text and not x.get("colspan")]
         singles = [search_list[i * 6 : i * 6 + 6] for i in range(len(search_list) // 6)]
         torrents = list()

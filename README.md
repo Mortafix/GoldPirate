@@ -4,10 +4,9 @@ Why join the Navy if you can be a Pirate?
 Python script to download torrent from the Internet.
 
 ## Installation
-The package can be downloaded directly from [Homebrew](https://brew.sh/index_it).
+The package can be downloaded directly from [PyPi](https://pypi.org/project/goldpirate/).
 ```bash
-brew tap Mortafix/GoldPirate
-brew install goldpirate
+pip install goldpirate
 ```
 
 ## Setup QBitTorrent
@@ -23,8 +22,8 @@ In order to download torrent, you need QBitTorrent.
 ## Example
 You can see the help, `-h`, man to know all the possibile commands.
 ```bash
-gold-pirate -q "The Matrix"
-gold-pirate -q "Harry Potter" -s age
+goldpirate -q "The Matrix"
+goldpirate -q "Harry Potter" -s age
 ```
 ![alt text](https://github.com/mortafix/homebrew-goldpirate/blob/master/images/Example.png?raw=true)  
 
