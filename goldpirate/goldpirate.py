@@ -12,7 +12,8 @@ from goldpirate.torrents.torlock import TorLock
 from goldpirate.torrents.torrentdownloads import TorrentDownloads
 from goldpirate.torrents.x1337 import X1337
 from halo import Halo
-from qbittorrent import Client, client
+from qbittorrentapi import Client
+from qbittorrentapi.exceptions import APIConnectionError
 from requests.exceptions import ConnectionError
 from tabulate import tabulate
 
@@ -120,8 +121,8 @@ def sort_all(torrents, sort):
 
 def download_from_qbittorrent(magnet_link, down_path):
     qb = Client("http://127.0.0.1:8080/")
-    qb.login()
-    qb.download_from_link(magnet_link, savepath=down_path)
+    qb.auth_log_in()
+    qb.torrents_add(magnet_link, savepath=down_path)
 
 
 def get_torrents(query, pages, sort=None):
@@ -196,12 +197,10 @@ def main():
                         ppaint(f"\n[#gray]{torrent_page}[/]\n[@underline]{magnet}[/]\n")
                     download_from_qbittorrent(magnet, DOWN_PATH)
                     ppaint("[#green]Torrent successfully sent to QBitTorrent![/]\n")
-                except ConnectionError:
-                    ppaint("[#red]QBitTorrent is not open.[/]\n")
-                except RuntimeError:
-                    ppaint("[#red]Unable to find QBitTorrent on localhost.[/]\n")
-                except client.LoginRequired:
-                    ppaint("[#red]Turn off QBitTorrent authentication.[/]\n")
+                except APIConnectionError:
+                    ppaint("[#red]Unable to find QBitTorrent.[/]\n")
+                except Exception:
+                    ppaint("[#red]Something went wrong..[/]\n")
             else:
                 ppaint("[#red]Magnet link not found.[/]\n")
     else:

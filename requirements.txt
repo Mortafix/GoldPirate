@@ -5,10 +5,13 @@ cachetools==4.2.2
 certifi==2020.6.20
 chardet==3.0.4
 charset-normalizer==2.1.0
+colorama==0.4.5
 colorifix==2.0.4
 dynaconf==3.1.9
 emoji==1.7.0
+halo==0.0.31
 idna==2.10
+log-symbols==0.0.14
 praw==7.6.0
 prawcore==2.3.0
 pymortafix==0.2.2
@@ -16,10 +19,13 @@ python-qbittorrent==0.4.2
 python-telegram-bot==13.13
 pytz==2022.1
 pytz-deprecation-shim==0.1.0.post0
+qbittorrent-api==2022.8.38
 requests==2.24.0
 six==1.16.0
 soupsieve==2.0.1
+spinners==0.0.24
 tabulate==0.8.10
+termcolor==1.1.0
 tornado==6.2
 tzdata==2022.1
 tzlocal==4.2
