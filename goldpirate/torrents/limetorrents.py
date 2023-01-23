@@ -3,7 +3,7 @@ from re import search, sub
 
 import requests
 from bs4 import BeautifulSoup as bs
-from requests.exceptions import ConnectTimeout
+from requests.exceptions import ConnectTimeout, ReadTimeout
 
 
 class LimeTorrents:
@@ -51,7 +51,7 @@ class LimeTorrents:
     def build_list(self, query, pages, sort=None):
         try:
             search_list = self._search_torrents(query, pages, sort)
-        except ConnectTimeout:
+        except (ConnectTimeout, ReadTimeout):
             return []
         singles = [search_list[i * 6 : i * 6 + 6] for i in range(len(search_list) // 6)]
         torrents = list()

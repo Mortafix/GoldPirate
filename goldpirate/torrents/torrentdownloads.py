@@ -3,7 +3,7 @@ from re import search, sub
 
 import requests
 from bs4 import BeautifulSoup as bs
-from requests.exceptions import ConnectTimeout
+from requests.exceptions import ConnectTimeout, ReadTimeout
 
 
 class TorrentDownloads:
@@ -41,7 +41,7 @@ class TorrentDownloads:
     def build_list(self, query, pages, sort=None):
         try:
             search_list = self._search_torrents(query, pages, sort)
-        except ConnectTimeout:
+        except (ConnectTimeout, ReadTimeout):
             return []
         torrents = list()
         for torrent in search_list:

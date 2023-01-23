@@ -14,7 +14,6 @@ from goldpirate.torrents.x1337 import X1337
 from halo import Halo
 from qbittorrentapi import Client
 from qbittorrentapi.exceptions import APIConnectionError
-from requests.exceptions import ConnectionError
 from tabulate import tabulate
 
 SITES = {
@@ -165,7 +164,7 @@ def main():
         "--version",
         help="script version",
         action="version",
-        version="gold-pirate v1.4.0",
+        version="gold-pirate v1.5.5",
     )
     args = parser.parse_args()
     query = args.q
