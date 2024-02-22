@@ -15,14 +15,11 @@ class X1337:
         self.sort_type = {
             "age": "time",
             "size": "size",
-            "seeders": "leechers",
+            "seed": "seeders",
             "leech": "leechers",
         }
         self.page = "/@@/"
         self.user_agent = {"User-Agent": user_agent}
-
-    def __hash__(self):
-        return self.url
 
     def _search_torrents(self, query, pages, sort=None):
         query_delim = sub(r"\s", self.delimiter, query)
