@@ -7,7 +7,7 @@ from requests.exceptions import ConnectTimeout, ReadTimeout
 
 
 class CorsaroNero:
-    def __init__(self):
+    def __init__(self, user_agent):
         self.url = "https://ilcorsaronero.link"
         self.search = "/advsearch.php?search=##"
         self.delimiter = "+"
@@ -19,9 +19,7 @@ class CorsaroNero:
             "leech": "peers",
         }
         self.page = "&page=@@"
-        self.user_agent = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36"
-        }
+        self.user_agent = {"User-Agent": user_agent}
 
     def _search_torrents(self, query, pages, sort=None):
         url_attach = (
@@ -43,6 +41,7 @@ class CorsaroNero:
                         ),
                         headers=self.user_agent,
                         timeout=3,
+                        verify=False,
                     ).text,
                     "html.parser",
                 ).findAll("td")[18:-3]
@@ -73,7 +72,7 @@ class CorsaroNero:
                 [
                     "CorsaroNero",
                     name,
-                    link_page,
+                    f"{self.url}{link_page}",
                     sub(r"(\d\d)$", r"20\1", time),
                     category,
                     sub(r"\d+$", "", size),
@@ -84,10 +83,8 @@ class CorsaroNero:
         return torrents
 
     def get_magnet_link(self, torrent_page):
-        soup = soup = bs(
-            requests.get(
-                "{}{}".format(self.url, torrent_page), allow_redirects=True
-            ).text,
+        soup = bs(
+            requests.get(torrent_page, allow_redirects=True, verify=False).text,
             "html.parser",
         )
         try:
@@ -98,6 +95,3 @@ class CorsaroNero:
             ][0]
         except IndexError:
             return None
-
-    def get_torrent_page(self, torrent_page):
-        return f"{self.url}{torrent_page}"

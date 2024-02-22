@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="goldpirate",
-    version="1.5.5",
+    version="1.6.3",
     author="Moris Doratiotto",
     author_email="moris.doratiotto@gmail.com",
     description="A python module to download torrents",
@@ -20,6 +20,8 @@ setuptools.setup(
         "colorifix >= 2.0.4",
         "qbittorrent-api  >= 2022.8.38",
         "tabulate >= 0.8.10",
+        "fake_useragent >= 1.4",
+        "humanfriendly >= 10.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3.8",

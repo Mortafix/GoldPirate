@@ -1,5 +1,4 @@
 from datetime import datetime
-from functools import reduce
 from re import search, sub
 
 import requests
@@ -8,7 +7,7 @@ from requests.exceptions import ConnectTimeout
 
 
 class X1337:
-    def __init__(self):
+    def __init__(self, user_agent):
         self.url = "https://1377x.to"
         self.search = "/search/##"
         self.delimiter = "+"
@@ -20,37 +19,31 @@ class X1337:
             "leech": "leechers",
         }
         self.page = "/@@/"
-        self.user_agent = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36"
-        }
+        self.user_agent = {"User-Agent": user_agent}
+
+    def __hash__(self):
+        return self.url
 
     def _search_torrents(self, query, pages, sort=None):
+        query_delim = sub(r"\s", self.delimiter, query)
         url_attach = (
-            sub(
-                "@@",
-                self.sort_type[sort],
-                sub("##", sub(r"\s", self.delimiter, query), self.sort),
-            )
-            if sort and sort in self.sort_type
-            else sub("##", sub(r"\s", self.delimiter, query), self.search)
+            sub("@@", self.sort_type[sort], sub("##", query_delim, self.sort))
+            if sort in self.sort_type
+            else sub("##", query_delim, self.search)
         )
-        return reduce(
-            lambda x, y: x + y,
-            [
-                bs(
-                    requests.get(
-                        "{}{}{}".format(
-                            self.url, url_attach, sub("@@", str(i + 1), self.page)
-                        ),
-                        headers=self.user_agent,
-                        timeout=3,
-                    ).text,
-                    "html.parser",
-                ).findAll("td")
-                for i in range(pages)
-            ],
-            [],
-        )
+        torrents_per_page = [
+            bs(
+                requests.get(
+                    f"{self.url}{url_attach}{sub('@@', str(i + 1), self.page)}",
+                    headers=self.user_agent,
+                    timeout=3,
+                    verify=False,
+                ).text,
+                "html.parser",
+            ).findAll("td")
+            for i in range(pages)
+        ]
+        return sum(torrents_per_page, start=[])
 
     def build_list(self, query, pages, sort=None):
         try:
@@ -68,7 +61,7 @@ class X1337:
                 [
                     "1337x",
                     name,
-                    link_page,
+                    f"{self.url}{link_page}",
                     self._date_converter(time),
                     category.title(),
                     sub(r"\d+$", "", size),
@@ -105,10 +98,8 @@ class X1337:
         )
 
     def get_magnet_link(self, torrent_page):
-        soup = soup = bs(
-            requests.get(
-                "{}{}".format(self.url, torrent_page), allow_redirects=True
-            ).text,
+        soup = bs(
+            requests.get(torrent_page, allow_redirects=True, verify=False).text,
             "html.parser",
         )
         try:
@@ -119,6 +110,3 @@ class X1337:
             ][0]
         except IndexError:
             return None
-
-    def get_torrent_page(self, torrent_page):
-        return f"{self.url}{torrent_page}"

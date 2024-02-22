@@ -8,7 +8,7 @@ from requests.exceptions import ConnectTimeout, ReadTimeout
 
 
 class TorLock:
-    def __init__(self):
+    def __init__(self, user_agent):
         self.url = "https://www.torlock.com"
         self.search = "/all/torrents/##"
         self.delimiter = "+"
@@ -20,9 +20,7 @@ class TorLock:
             "leech": "peers",
         }
         self.page = "&page=@@"
-        self.user_agent = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36"
-        }
+        self.user_agent = {"User-Agent": user_agent}
 
     def _search_torrents(self, query, pages, sort=None):
         url_attach = (
@@ -44,6 +42,7 @@ class TorLock:
                         ),
                         headers=self.user_agent,
                         timeout=3,
+                        verify=False,
                     ).text,
                     "html.parser",
                 ).findAll("td")[27:]
@@ -69,7 +68,7 @@ class TorLock:
                     [
                         "TorLock",
                         name,
-                        link_page[0],
+                        f"{self.url}{link_page[0]}",
                         self._date_converter(time),
                         self._get_category(category),
                         sub(r"\d+$", "", size),
@@ -104,10 +103,8 @@ class TorLock:
         return categories[category_id] if category_id in categories else "Other"
 
     def get_magnet_link(self, torrent_page):
-        soup = soup = bs(
-            requests.get(
-                "{}{}".format(self.url, torrent_page), allow_redirects=True
-            ).text,
+        soup = bs(
+            requests.get(torrent_page, allow_redirects=True, verify=False).text,
             "html.parser",
         )
         try:
@@ -118,6 +115,3 @@ class TorLock:
             ][0]
         except IndexError:
             return None
-
-    def get_torrent_page(self, torrent_page):
-        return f"{self.url}{torrent_page}"

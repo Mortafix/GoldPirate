@@ -7,7 +7,7 @@ from requests.exceptions import ConnectTimeout, ReadTimeout
 
 
 class LimeTorrents:
-    def __init__(self):
+    def __init__(self, user_agent):
         self.url = "https://limetorrents.info"
         self.search = "/search/all/##"
         self.delimiter = "-"
@@ -19,6 +19,7 @@ class LimeTorrents:
             "leech": "leechs",
         }
         self.page = "/@@"
+        self.user_agent = {"User-Agent": user_agent}
 
     def _search_torrents(self, query, pages, sort=None):
         url_attach = (
@@ -39,7 +40,9 @@ class LimeTorrents:
                             self.url, url_attach, sub("@@", str(i + 1), self.page)
                         ),
                         allow_redirects=True,
+                        headers=self.user_agent,
                         timeout=3,
+                        verify=False,
                     ).text,
                     "html.parser",
                 ).findAll("td")[12:]
@@ -64,7 +67,7 @@ class LimeTorrents:
                 [
                     "LimeTorrents",
                     name,
-                    link_page,
+                    f"{self.url}{link_page}",
                     last_check,
                     category,
                     size,
@@ -75,10 +78,8 @@ class LimeTorrents:
         return torrents
 
     def get_magnet_link(self, torrent_page):
-        soup = soup = bs(
-            requests.get(
-                "{}{}".format(self.url, torrent_page), allow_redirects=True
-            ).text,
+        soup = bs(
+            requests.get(torrent_page, allow_redirects=True, verify=False).text,
             "html.parser",
         )
         try:
@@ -89,6 +90,3 @@ class LimeTorrents:
             ][0]
         except IndexError:
             return None
-
-    def get_torrent_page(self, torrent_page):
-        return f"{self.url}{torrent_page}"

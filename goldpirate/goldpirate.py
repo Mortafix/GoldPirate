@@ -2,26 +2,32 @@ from argparse import ArgumentParser
 from fileinput import input as finput
 from json import loads
 from os import path
-from re import search
 from subprocess import check_output
 
 from colorifix.colorifix import erase, paint, ppaint
+from fake_useragent import UserAgent
 from goldpirate.torrents.corsaronero import CorsaroNero
 from goldpirate.torrents.limetorrents import LimeTorrents
 from goldpirate.torrents.torlock import TorLock
 from goldpirate.torrents.torrentdownloads import TorrentDownloads
 from goldpirate.torrents.x1337 import X1337
 from halo import Halo
+from humanfriendly import parse_size
 from qbittorrentapi import Client
 from qbittorrentapi.exceptions import APIConnectionError
+from requests import packages
 from tabulate import tabulate
+from urllib3.exceptions import InsecureRequestWarning
+
+packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+fake_ua = UserAgent()
 
 SITES = {
-    "1337x": X1337(),
-    "LimeTorrents": LimeTorrents(),
-    "TorLock": TorLock(),
-    "TorrentDownloads": TorrentDownloads(),
-    "CorsaroNero": CorsaroNero(),
+    "1337x": X1337(fake_ua.random),
+    "LimeTorrents": LimeTorrents(fake_ua.random),
+    "TorLock": TorLock(fake_ua.random),
+    "TorrentDownloads": TorrentDownloads(fake_ua.random),
+    "CorsaroNero": CorsaroNero(fake_ua.random),
 }
 COLORS = {
     "1337x": 161,
@@ -68,15 +74,6 @@ def sanitize_str(string):
     return string.encode("ascii", "ignore").decode().strip()
 
 
-def human_size(size):
-    units = {"KB": 0, "MB": 3, "GB": 6, "TB": 9}
-    match_size = search(r"([\d\.]+)\s+(KB|MB|GB|TB)", size)
-    if not match_size:
-        return 0
-    size_float, unit = match_size.groups()
-    return float(size_float) * 1000 ** units.get(unit) * 1024
-
-
 # ---- Torrents
 
 
@@ -110,7 +107,7 @@ def print_torrents(torrents, window_size):
 
 
 def sort_all(torrents, sort):
-    sort_type = {"size": (human_size, 5), "seed": (int, 6), "leech": (int, 7)}
+    sort_type = {"size": (parse_size, 5), "seed": (int, 6), "leech": (int, 7)}
     if not sort or sort not in sort_type:
         return torrents
     return sorted(
@@ -187,9 +184,8 @@ def main():
             torr_idx = int(torr_idx)
             if torr_idx == 0:
                 exit(-1)
-            torr_link = torrents[torr_idx - 1][2]
-            magnet = SITES[torrents[torr_idx - 1][0]].get_magnet_link(torr_link)
-            torrent_page = SITES[torrents[torr_idx - 1][0]].get_torrent_page(torr_link)
+            torrent_page = torrents[torr_idx - 1][2]
+            magnet = SITES[torrents[torr_idx - 1][0]].get_magnet_link(torrent_page)
             if magnet:
                 try:
                     if verbose:
