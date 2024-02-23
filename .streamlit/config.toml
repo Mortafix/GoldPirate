@@ -1,0 +1,21 @@
+[runner]
+fastReruns = true
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"
+
+[server]
+runOnSave = true
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base="dark"
+primaryColor="#e4c40d"
+backgroundColor="#0E1117"
+secondaryBackgroundColor="#262730"
+textColor="#FAFAFA"
+font="sans serif"
