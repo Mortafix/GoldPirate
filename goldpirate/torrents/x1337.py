@@ -69,7 +69,7 @@ class X1337:
         return torrents
 
     def _date_converter(self, site_date):
-        if search(r"\d\d:\d\d", site_date):
+        if search(r"(am|pm)", site_date):
             return datetime.now().strftime("%d.%m.%Y")
         month, day, year = site_date.split()
         months = {
@@ -86,13 +86,9 @@ class X1337:
             "Nov.": 11,
             "Dec.": 12,
         }
-        return (
-            "{:02d}.{:02d}.20{}".format(
-                int(sub(r"\D+", "", day)), months[month], year[1:]
-            )
-            if not search("(am|pm)", site_date)
-            else "{}.{}.2020".format(months[day], int(sub(r"\D+", "", year)))
-        )
+        day = int(sub(r"\D+", "", day))
+        month = months.get(month, 1)
+        return datetime(2000 + int(year[1:]), month, day).strftime("%d.%m.%Y")
 
     def get_magnet_link(self, torrent_page):
         soup = bs(
