@@ -10,6 +10,7 @@ from torrents.limetorrents import LimeTorrents
 from torrents.rarbg import RarBG
 from torrents.torlock import TorLock
 from torrents.torrentdownloads import TorrentDownloads
+from torrents.torrentfunk import TorrentFunk
 from torrents.x1337 import X1337
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -29,6 +30,7 @@ SITES = {
     "TorrentDownloads": TorrentDownloads(fake_ua.random),
     "CorsaroNero": CorsaroNero(fake_ua.random),
     "RarBG": RarBG(fake_ua.random),
+    # "TorrentFunk": TorrentFunk(fake_ua.random),
 }
 
 
