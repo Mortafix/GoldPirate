@@ -7,6 +7,7 @@ from qbittorrentapi.exceptions import APIConnectionError, LoginFailed
 from requests import packages
 from torrents.corsaronero import CorsaroNero
 from torrents.limetorrents import LimeTorrents
+from torrents.rarbg import RarBG
 from torrents.torlock import TorLock
 from torrents.torrentdownloads import TorrentDownloads
 from torrents.x1337 import X1337
@@ -27,6 +28,7 @@ SITES = {
     "TorLock": TorLock(fake_ua.random),
     "TorrentDownloads": TorrentDownloads(fake_ua.random),
     "CorsaroNero": CorsaroNero(fake_ua.random),
+    "RarBG": RarBG(fake_ua.random),
 }
 
 

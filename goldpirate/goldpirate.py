@@ -8,6 +8,7 @@ from colorifix.colorifix import erase, paint, ppaint
 from fake_useragent import UserAgent
 from goldpirate.torrents.corsaronero import CorsaroNero
 from goldpirate.torrents.limetorrents import LimeTorrents
+from goldpirate.torrents.rarbg import RarBG
 from goldpirate.torrents.torlock import TorLock
 from goldpirate.torrents.torrentdownloads import TorrentDownloads
 from goldpirate.torrents.x1337 import X1337
@@ -28,6 +29,7 @@ SITES = {
     "TorLock": TorLock(fake_ua.random),
     "TorrentDownloads": TorrentDownloads(fake_ua.random),
     "CorsaroNero": CorsaroNero(fake_ua.random),
+    "RarBG": RarBG(fake_ua.random),
 }
 COLORS = {
     "1337x": 161,
@@ -35,6 +37,7 @@ COLORS = {
     "TorLock": 123,
     "TorrentDownloads": 202,
     "CorsaroNero": 239,
+    "RarBG": 33,
 }
 
 
