@@ -73,13 +73,12 @@ def main():
     with st.status(f"**Searching** torrents for `{query}`", expanded=True) as status:
         for i, (name, site) in enumerate(SITES.items()):
             try:
-                st.write(f"Searching in **{name}**..")
+                st.write(f"**{name}** | Searching..")
                 torrents = scraping(site, name, query, pages, sort)
                 torrents_list.extend(torrents)
-                st.write(f"Found **{len(torrents)}** torrent(s)!")
-            except Exception as e:
-                raise e
-                st.write("Error..")
+                st.write(f"**{name}** | Found **{len(torrents)}** torrent(s)!")
+            except Exception:
+                st.write("**{name}** | Error..")
                 continue
         if not torrents_list:
             return status.update(
