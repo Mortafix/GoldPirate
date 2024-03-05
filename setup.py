@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="goldpirate",
-    version="1.6.5",
+    version="1.7.2",
     author="Moris Doratiotto",
     author_email="moris.doratiotto@gmail.com",
     description="A python module to download torrents",
@@ -22,6 +22,7 @@ setuptools.setup(
         "tabulate >= 0.8.10",
         "fake_useragent >= 1.4",
         "humanfriendly >= 10.0",
+        "toml >= 0.10.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3.8",
@@ -33,7 +34,7 @@ setuptools.setup(
     keywords=["torrent", "download"],
     package_data={
         "goldpirate": [
-            "config.json",
+            "config.toml",
             "torrents/corsaronero.py",
             "torrents/limetorrents.py",
             "torrents/torlock.py",

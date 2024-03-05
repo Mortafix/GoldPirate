@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from fileinput import input as finput
-from json import loads
 from os import path
 from subprocess import check_output
 
@@ -18,6 +17,7 @@ from qbittorrentapi import Client
 from qbittorrentapi.exceptions import APIConnectionError
 from requests import packages
 from tabulate import tabulate
+from toml import load
 from urllib3.exceptions import InsecureRequestWarning
 
 packages.urllib3.disable_warnings(category=InsecureRequestWarning)
@@ -44,24 +44,12 @@ COLORS = {
 # ---- Configuration
 
 
-def read_config(script_dir):
-    with open(path.join(script_dir, "config.json")) as file:
-        settings_str = [
-            line
-            for line in file.read().split("\n")
-            if line and line.strip()[:2] != "//"
-        ]
-    config = loads("".join(settings_str))
-    labels = ("download-folder", "defualt-sort", "total-result", "total-page")
-    return (config.get(label) for label in labels)
-
-
 def change_configuration(script_dir, down_path):
-    cfg_path = input("Download path:\n").strip() or down_path
+    cfg_path = input("Default download path: ").strip() or down_path
     while not path.exists(cfg_path) or cfg_path == "/tmp":
         erase()
         cfg_path = input(paint("[#red]Folder not exists.[/] Retry: ")) or down_path
-    for line in finput(path.join(script_dir, "config.json"), inplace=1):
+    for line in finput(path.join(script_dir, "config.toml"), inplace=1):
         print(line.replace(down_path, cfg_path), end="")
     ppaint("[#green]Successful! New configuration saved correctly.")
 
@@ -118,18 +106,26 @@ def sort_all(torrents, sort):
     )
 
 
-def download_from_qbittorrent(magnet_link, down_path):
-    qb = Client("http://127.0.0.1:8080/")
+def download_from_qbittorrent(magnet_link, down_path, config):
+    qb = Client(
+        config.get("address"),
+        config.get("port") or None,
+        config.get("username"),
+        config.get("password"),
+    )
     qb.auth_log_in()
-    qb.torrents_add(magnet_link, savepath=down_path)
+    return qb.torrents_add(magnet_link, savepath=down_path)
 
 
 def get_torrents(query, pages, sort=None):
     torrents = list()
     for name, site in SITES.items():
         with Halo(text=paint(f"Scanning [#blue]{name}[/]"), spinner="dots"):
-            site_torrents = site.build_list(query, pages, sort)
-            torrents.extend(site_torrents)
+            try:
+                site_torrents = site.build_list(query, pages, sort)
+                torrents.extend(site_torrents)
+            except Exception:
+                continue
     return torrents
 
 
@@ -138,7 +134,9 @@ def get_torrents(query, pages, sort=None):
 
 def main():
     SCRIPT_DIR = path.dirname(path.realpath(__file__))
-    DOWN_PATH, DEFAULT_SORT, LIMIT, PAGES = read_config(SCRIPT_DIR)
+    config = load(open(path.join(SCRIPT_DIR, "config.toml")))
+    config_qbt = config.get("qbittorrent")
+    config_search = config.get("search")
     # parser
     parser = ArgumentParser(
         prog="gold-pirate",
@@ -152,6 +150,7 @@ def main():
     parser.add_argument(
         "-s", type=str, help="sort result [age,size,seed,leech]", metavar=("SORT")
     )
+    parser.add_argument("-o", type=str, help="download folder")
     parser.add_argument("-c", action="store_true", help="change configuration")
     parser.add_argument(
         "-V",
@@ -164,19 +163,22 @@ def main():
         "--version",
         help="script version",
         action="version",
-        version="gold-pirate v1.5.5",
+        version="gold-pirate v1.7.2",
     )
     args = parser.parse_args()
     query = args.q
-    sort = args.s if args.s else DEFAULT_SORT
+    sort = args.s if args.s else config_search.get("sort")
     config = args.c
     verbose = args.verbose
+    if args.o and not path.exists(args.o):
+        return ppaint(f"[#red]Folder [@underline]{args.o}[/@] doesn't exist.")
+    down_path = args.o or config_qbt.get("download_folder")
     # search
-    if DOWN_PATH == "/tmp" or config:
-        change_configuration(SCRIPT_DIR, DOWN_PATH)
-        exit(-1)
-    torrents = sort_all(get_torrents(query, PAGES, sort), sort)
-    limit = len(torrents) if len(torrents) < LIMIT else LIMIT
+    if down_path == "/tmp" or config:
+        change_configuration(SCRIPT_DIR, down_path)
+        return main()
+    torrents = sort_all(get_torrents(query, config_search.get("pages"), sort), sort)
+    limit = min(len(torrents), config_search.get("limit"))
     # download
     if limit > 0 and torrents:
         print_torrents(torrents[:limit], get_terminal_window_size())
@@ -193,7 +195,7 @@ def main():
                 try:
                     if verbose:
                         ppaint(f"\n[#gray]{torrent_page}[/]\n[@underline]{magnet}[/]\n")
-                    download_from_qbittorrent(magnet, DOWN_PATH)
+                    download_from_qbittorrent(magnet, down_path, config_qbt)
                     ppaint("[#green]Torrent successfully sent to QBitTorrent![/]\n")
                 except APIConnectionError:
                     ppaint("[#red]Unable to find QBitTorrent.[/]\n")
