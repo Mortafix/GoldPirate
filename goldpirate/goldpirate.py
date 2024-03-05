@@ -163,7 +163,7 @@ def main():
         "--version",
         help="script version",
         action="version",
-        version="gold-pirate v1.7.2",
+        version="gold-pirate v1.7.3",
     )
     args = parser.parse_args()
     query = args.q
