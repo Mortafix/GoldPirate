@@ -170,8 +170,6 @@ def main():
     sort = args.s if args.s else config_search.get("sort")
     config = args.c
     verbose = args.verbose
-    if args.o and not path.exists(args.o):
-        return ppaint(f"[#red]Folder [@underline]{args.o}[/@] doesn't exist.")
     down_path = args.o or config_qbt.get("download_folder")
     # search
     if down_path == "/tmp" or config:
