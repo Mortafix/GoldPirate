@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from fileinput import input as finput
 from os import path
+from re import sub
 from subprocess import check_output
 
 from colorifix.colorifix import erase, paint, ppaint
@@ -41,17 +42,26 @@ COLORS = {
 }
 
 
+def paint_or_not(text, colored, _print=True):
+    if colored:
+        return ppaint(text) if _print else paint(text)
+    plain_text = sub(r"\[(#|\/|@).*?\]", "", text)
+    return print(plain_text) if _print else plain_text
+
+
 # ---- Configuration
 
 
-def change_configuration(script_dir, down_path):
+def change_configuration(script_dir, down_path, colored):
     cfg_path = input("Default download path: ").strip() or down_path
-    while not path.exists(cfg_path) or cfg_path == "/tmp":
+    while not cfg_path or not path.exists(cfg_path) or cfg_path == "/tmp":
         erase()
-        cfg_path = input(paint("[#red]Folder not exists.[/] Retry: ")) or down_path
+        text = "[#red]Folder not exists.[/] Retry: "
+        cfg_path = input(paint_or_not(text, colored, False)) or down_path
     for line in finput(path.join(script_dir, "config.toml"), inplace=1):
         print(line.replace(down_path, cfg_path), end="")
-    ppaint("[#green]Successful! New configuration saved correctly.")
+    text = "[#green]Successful! New configuration saved correctly."
+    paint_or_not(text, colored)
 
 
 # ---- Utils
@@ -68,8 +78,13 @@ def sanitize_str(string):
 # ---- Torrents
 
 
-def print_torrents(torrents, window_size):
+def print_torrents(torrents, window_size, colored):
     max_name_size = window_size - 89 if window_size < 171 else -1
+    if not colored:
+        print()
+        for i, (site, name, _, _, _, size, _, _) in enumerate(torrents, 1):
+            print(f"{i} [{site}] {name[:max_name_size + 30].strip()} ({size})")
+        return print()
     table_torrents = [
         (
             i + 1,
@@ -117,32 +132,37 @@ def download_from_qbittorrent(magnet_link, down_path, config):
     return qb.torrents_add(magnet_link, savepath=down_path)
 
 
-def get_torrents(query, pages, sort=None):
+def get_torrents(query, pages, sort=None, colored=False):
     torrents = list()
     for name, site in SITES.items():
+        if not colored:
+            print(f"Scanning {name}..")
+            try:
+                site_torrents = site.build_list(query, pages, sort)
+                torrents.extend(site_torrents)
+            except Exception:
+                continue
+            continue
         with Halo(text=paint(f"Scanning [#blue]{name}[/]"), spinner="dots"):
             try:
                 site_torrents = site.build_list(query, pages, sort)
                 torrents.extend(site_torrents)
             except Exception:
                 continue
+    if not colored:
+        print()
     return torrents
 
 
 # ---- Main
 
 
-def main():
-    SCRIPT_DIR = path.dirname(path.realpath(__file__))
-    config = load(open(path.join(SCRIPT_DIR, "config.toml")))
-    config_qbt = config.get("qbittorrent")
-    config_search = config.get("search")
-    # parser
+def args_parser():
     parser = ArgumentParser(
         prog="gold-pirate",
         description="Do you want to be a pirate? It's FREE.",
-        usage="gold-pirate -q QUERY [-s SORT]",
-        epilog='Example: gold-pirate -q "Harry Potter Stone" -s size',
+        usage="gold-pirate -q QUERY [-s SORT] [-o OUTPUT]",
+        epilog='Example: gold-pirate -q "Harry Potter" -s size -V',
     )
     parser.add_argument(
         "-q", type=str, help="query to search", metavar=("QUERY"), required=True
@@ -150,8 +170,10 @@ def main():
     parser.add_argument(
         "-s", type=str, help="sort result [age,size,seed,leech]", metavar=("SORT")
     )
-    parser.add_argument("-o", type=str, help="download folder")
-    parser.add_argument("-c", action="store_true", help="change configuration")
+    parser.add_argument("-o", type=str, help="download folder", metavar=("OUTPUT"))
+    parser.add_argument(
+        "-p", "--plain-text", action="store_true", help="plain text output"
+    )
     parser.add_argument(
         "-V",
         "--verbose",
@@ -165,25 +187,37 @@ def main():
         action="version",
         version="gold-pirate v1.7.3",
     )
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main():
+    SCRIPT_DIR = path.dirname(path.realpath(__file__))
+    config = load(open(path.join(SCRIPT_DIR, "config.toml")))
+    config_qbt = config.get("qbittorrent")
+    config_search = config.get("search")
+    # args
+    args = args_parser()
     query = args.q
     sort = args.s if args.s else config_search.get("sort")
-    config = args.c
     verbose = args.verbose
+    colored = not args.plain_text
     down_path = args.o or config_qbt.get("download_folder")
     # search
-    if down_path == "/tmp" or config:
-        change_configuration(SCRIPT_DIR, down_path)
+    if down_path == "/tmp":
+        change_configuration(SCRIPT_DIR, down_path, colored)
         return main()
-    torrents = sort_all(get_torrents(query, config_search.get("pages"), sort), sort)
+    torrents = sort_all(
+        get_torrents(query, config_search.get("pages"), sort, colored), sort
+    )
     limit = min(len(torrents), config_search.get("limit"))
     # download
     if limit > 0 and torrents:
-        print_torrents(torrents[:limit], get_terminal_window_size())
+        print_torrents(torrents[:limit], get_terminal_window_size(), colored)
         while True:
-            torr_idx = input(paint("> Select a torrent [@bold][0:exit][/]: "))
+            text = "> Select a torrent [@bold][0:exit][/]: "
+            torr_idx = input(paint_or_not(text, colored, False))
             while not torr_idx.isdigit() or not int(torr_idx) in range(limit + 1):
-                torr_idx = input(paint("> Select a torrent [@bold][0:exit][/]: "))
+                torr_idx = input(paint_or_not(text, colored, False))
             torr_idx = int(torr_idx)
             if torr_idx == 0:
                 exit(-1)
@@ -192,17 +226,23 @@ def main():
             if magnet:
                 try:
                     if verbose:
-                        ppaint(f"\n[#gray]{torrent_page}[/]\n[@underline]{magnet}[/]\n")
+                        text = f"[#gray]{torrent_page}[/]\n\n[@underline]{magnet}[/]\n"
+                        paint_or_not(text, colored)
                     download_from_qbittorrent(magnet, down_path, config_qbt)
-                    ppaint("[#green]Torrent successfully sent to QBitTorrent![/]\n")
+                    text = "[#green]Torrent successfully sent to QBitTorrent![/]\n"
+                    paint_or_not(text, colored)
                 except APIConnectionError:
-                    ppaint("[#red]Unable to find QBitTorrent.[/]\n")
+                    text = "[#red]Unable to find QBitTorrent.[/]\n"
+                    paint_or_not(text, colored)
                 except Exception:
-                    ppaint("[#red]Something went wrong..[/]\n")
+                    text = "[#red]Something went wrong..[/]\n"
+                    paint_or_not(text, colored)
             else:
-                ppaint("[#red]Magnet link not found.[/]\n")
+                text = "[#red]Magnet link not found.[/]\n"
+                paint_or_not(text, colored)
     else:
-        ppaint(f"[#red]No torrent found for [@underline @bold]{query}[/@].[/]")
+        text = f"[#red]No torrent found for [@underline @bold]{query}[/@].[/]"
+        paint_or_not(text, colored)
 
 
 if __name__ == "__main__":
