@@ -24,6 +24,7 @@ You can see the help, `-h`, man to know all the possibile commands.
 ```bash
 goldpirate -q "The Matrix"
 goldpirate -q "Harry Potter" -s age
+goldpirate -q "Back to the Future" -s size -e rarbg -o /home/me/movies --plain-text --verbose
 ```
 ![alt text](https://github.com/mortafix/homebrew-goldpirate/blob/master/images/Example.png?raw=true)  
 
