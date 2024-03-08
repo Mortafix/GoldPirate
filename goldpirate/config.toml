@@ -6,6 +6,7 @@ password = "admin"
 download_folder = "/tmp"
 
 [search]
+engine = "all" # default engine (all sites)
 sort = "seed" # default sort
 limit = 50 # 0: no limit
 pages = 1 # pages serched on every site

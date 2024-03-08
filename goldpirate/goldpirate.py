@@ -132,9 +132,11 @@ def download_from_qbittorrent(magnet_link, down_path, config):
     return qb.torrents_add(magnet_link, savepath=down_path)
 
 
-def get_torrents(query, pages, sort=None, colored=False):
+def get_torrents(engine, query, pages, sort=None, colored=False):
     torrents = list()
     for name, site in SITES.items():
+        if engine != "all" and engine != name.lower():
+            continue
         if not colored:
             print(f"Scanning {name}..")
             try:
@@ -161,7 +163,7 @@ def args_parser():
     parser = ArgumentParser(
         prog="gold-pirate",
         description="Do you want to be a pirate? It's FREE.",
-        usage="gold-pirate -q QUERY [-s SORT] [-o OUTPUT]",
+        usage="gold-pirate -q QUERY [-s SORT] [-e ENGINE] [-o OUTPUT]",
         epilog='Example: gold-pirate -q "Harry Potter" -s size -V',
     )
     parser.add_argument(
@@ -170,6 +172,7 @@ def args_parser():
     parser.add_argument(
         "-s", type=str, help="sort result [age,size,seed,leech]", metavar=("SORT")
     )
+    parser.add_argument("-e", type=str, help="search engine (site)", metavar=("ENGINE"))
     parser.add_argument("-o", type=str, help="download folder", metavar=("OUTPUT"))
     parser.add_argument(
         "-p", "--plain-text", action="store_true", help="plain text output"
@@ -201,13 +204,21 @@ def main():
     sort = args.s if args.s else config_search.get("sort")
     verbose = args.verbose
     colored = not args.plain_text
+    engine = args.e or config_search.get("engine")
     down_path = args.o or config_qbt.get("download_folder")
+    # engine
+    if engine != "all" and engine not in [site.lower() for site in SITES]:
+        text = f"[#red]Search engine '{engine}' not found!"
+        paint_or_not(text, colored)
+        sites = ", ".join(f"[@underline]{site.lower()}[/@]" for site in SITES)
+        text = f"[#red]Must be one in {sites} or [@underline]all"
+        return paint_or_not(text, colored)
     # search
     if down_path == "/tmp":
         change_configuration(SCRIPT_DIR, down_path, colored)
         return main()
     torrents = sort_all(
-        get_torrents(query, config_search.get("pages"), sort, colored), sort
+        get_torrents(engine, query, config_search.get("pages"), sort, colored), sort
     )
     limit = min(len(torrents), config_search.get("limit"))
     # download
