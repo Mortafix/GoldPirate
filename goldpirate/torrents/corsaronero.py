@@ -20,8 +20,13 @@ class CorsaroNero:
         self.page = "&page=@@"
         self.user_agent = {"User-Agent": user_agent}
 
+    def _get(self, url):
+        return get(
+            url, allow_redirects=True, headers=self.user_agent, timeout=3, verify=False
+        )
+
     def _search_torrents(self, query, pages, sort=None):
-        url_attach = (
+        endpoint = (
             sub(
                 "@@",
                 self.sort_type[sort],
@@ -34,7 +39,7 @@ class CorsaroNero:
         search_texts = list()
         for i in range(pages):
             page_url = sub("@@", str(i), self.page)
-            soup = bs(get(f"{self.url}{url_attach}{page_url}").text, "html.parser")
+            soup = bs(self._get(f"{self.url}{endpoint}{page_url}").text, "html.parser")
             search_texts.extend(soup.findAll("td"))
             titles_list.extend(soup.findAll("th"))
         return search_texts, titles_list[7:]
@@ -68,11 +73,8 @@ class CorsaroNero:
         return torrents
 
     def get_magnet_link(self, torrent_page):
-        soup = bs(
-            get(torrent_page, allow_redirects=True, verify=False).text,
-            "html.parser",
-        )
         try:
+            soup = bs(self._get(torrent_page).text, "html.parser")
             return [
                 a.get("href")
                 for a in soup.findAll("a")

@@ -1,8 +1,8 @@
 from datetime import datetime
 from re import search, sub
 
-import requests
 from bs4 import BeautifulSoup as bs
+from requests import get
 from requests.exceptions import ConnectTimeout
 
 
@@ -21,26 +21,24 @@ class RarBG:
         self.page = "/search/@@/"
         self.user_agent = {"User-Agent": user_agent}
 
+    def _get(self, url):
+        return get(
+            url, allow_redirects=True, headers=self.user_agent, timeout=3, verify=False
+        )
+
     def _search_torrents(self, query, pages, sort=None):
         query_delim = sub(r"\s", self.delimiter, query)
-        url_attach = (
+        endpoint = (
             sub("@@", self.sort_type[sort], sub("##", query_delim, self.sort))
             if sort in self.sort_type
             else sub("##", query_delim, self.search)
         )
-        torrents_per_page = [
-            bs(
-                requests.get(
-                    f"{self.url}{sub('@@', str(i + 1), self.page)}{url_attach}",
-                    headers=self.user_agent,
-                    timeout=3,
-                    verify=False,
-                ).text,
-                "html.parser",
-            ).findAll("td")[45:-3]
-            for i in range(pages)
-        ]
-        return sum(torrents_per_page, start=[])
+        search_texts = list()
+        for i in range(pages):
+            page_url = sub("@@", str(i + 1), self.page)
+            soup = bs(self._get(f"{self.url}{page_url}{endpoint}").text, "html.parser")
+            search_texts.extend(soup.findAll("td")[45:-3])
+        return search_texts
 
     def build_list(self, query, pages, sort=None):
         try:
@@ -75,11 +73,8 @@ class RarBG:
         return ""
 
     def get_magnet_link(self, torrent_page):
-        soup = bs(
-            requests.get(torrent_page, allow_redirects=True, verify=False).text,
-            "html.parser",
-        )
         try:
+            soup = bs(self._get(torrent_page).text, "html.parser")
             return [
                 a.get("href")
                 for a in soup.findAll("a")

@@ -191,7 +191,7 @@ def args_parser():
         "--version",
         help="script version",
         action="version",
-        version="gold-pirate v1.8.2",
+        version="gold-pirate v1.8.3",
     )
     return parser.parse_args()
 

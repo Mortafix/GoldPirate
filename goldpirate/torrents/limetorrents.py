@@ -1,8 +1,7 @@
-from functools import reduce
 from re import search, sub
 
-import requests
 from bs4 import BeautifulSoup as bs
+from requests import get
 from requests.exceptions import ConnectTimeout, ReadTimeout
 
 
@@ -21,8 +20,13 @@ class LimeTorrents:
         self.page = "/@@"
         self.user_agent = {"User-Agent": user_agent}
 
+    def _get(self, url):
+        return get(
+            url, allow_redirects=True, headers=self.user_agent, timeout=3, verify=False
+        )
+
     def _search_torrents(self, query, pages, sort=None):
-        url_attach = (
+        endpoint = (
             sub(
                 "@@",
                 self.sort_type[sort],
@@ -31,25 +35,12 @@ class LimeTorrents:
             if sort and sort in self.sort_type
             else sub("##", sub(r"\s", self.delimiter, query), self.search)
         )
-        return reduce(
-            lambda x, y: x + y,
-            [
-                bs(
-                    requests.get(
-                        "{}{}{}".format(
-                            self.url, url_attach, sub("@@", str(i + 1), self.page)
-                        ),
-                        allow_redirects=True,
-                        headers=self.user_agent,
-                        timeout=3,
-                        verify=False,
-                    ).text,
-                    "html.parser",
-                ).findAll("td")[12:]
-                for i in range(pages)
-            ],
-            [],
-        )
+        search_texts = list()
+        for i in range(pages):
+            page_url = sub("@@", str(i), self.page)
+            soup = bs(self._get(f"{self.url}{endpoint}{page_url}").text, "html.parser")
+            search_texts.extend(soup.findAll("td")[12:])
+        return search_texts
 
     def build_list(self, query, pages, sort=None):
         try:
@@ -78,11 +69,8 @@ class LimeTorrents:
         return torrents
 
     def get_magnet_link(self, torrent_page):
-        soup = bs(
-            requests.get(torrent_page, allow_redirects=True, verify=False).text,
-            "html.parser",
-        )
         try:
+            soup = bs(self._get(torrent_page).text, "html.parser")
             return [
                 x.get("href")
                 for x in soup.findAll("a", {"class": "csprite_dltorrent"})

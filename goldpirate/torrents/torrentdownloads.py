@@ -1,8 +1,7 @@
-from functools import reduce
 from re import search, sub
 
-import requests
 from bs4 import BeautifulSoup as bs
+from requests import get
 from requests.exceptions import ConnectTimeout, ReadTimeout
 
 
@@ -16,26 +15,19 @@ class TorrentDownloads:
         self.page = "&page=@@"
         self.user_agent = {"User-Agent": user_agent}
 
-    def _search_torrents(self, query, pages, sort=None):
-        url_attach = sub("##", sub(r"\s", self.delimiter, query), self.search)
-        return reduce(
-            lambda x, y: x + y,
-            [
-                bs(
-                    requests.get(
-                        "{}{}{}".format(
-                            self.url, url_attach, sub("@@", str(i + 1), self.page)
-                        ),
-                        headers=self.user_agent,
-                        timeout=3,
-                        verify=False,
-                    ).text,
-                    "html.parser",
-                ).findAll("div", {"class": "grey_bar3"})[6:-1]
-                for i in range(pages)
-            ],
-            [],
+    def _get(self, url):
+        return get(
+            url, allow_redirects=True, headers=self.user_agent, timeout=3, verify=False
         )
+
+    def _search_torrents(self, query, pages, sort=None):
+        endpoint = sub("##", sub(r"\s", self.delimiter, query), self.search)
+        search_texts = list()
+        for i in range(pages):
+            page_url = sub("@@", str(i + 1), self.page)
+            soup = bs(self._get(f"{self.url}{endpoint}{page_url}").text, "html.parser")
+            search_texts.extend(soup.findAll("div", {"class": "grey_bar3"})[6:-1])
+        return search_texts
 
     def build_list(self, query, pages, sort=None):
         try:
@@ -85,11 +77,8 @@ class TorrentDownloads:
         return categories[category_id] if category_id in categories else "Other"
 
     def get_magnet_link(self, torrent_page):
-        soup = bs(
-            requests.get(torrent_page, allow_redirects=True, verify=False).text,
-            "html.parser",
-        )
         try:
+            soup = bs(self._get(torrent_page).text, "html.parser")
             return [
                 a.get("href")
                 for a in soup.findAll("a")
