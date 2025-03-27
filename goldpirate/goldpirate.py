@@ -9,6 +9,7 @@ from fake_useragent import UserAgent
 from goldpirate.torrents.corsaronero import CorsaroNero
 from goldpirate.torrents.limetorrents import LimeTorrents
 from goldpirate.torrents.rarbg import RarBG
+from goldpirate.torrents.thepiratebay import ThePirateBay
 from goldpirate.torrents.torlock import TorLock
 from goldpirate.torrents.torrentdownloads import TorrentDownloads
 from goldpirate.torrents.x1337 import X1337
@@ -25,12 +26,13 @@ packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 fake_ua = UserAgent()
 
 SITES = {
-    "1337x": X1337(fake_ua.random),
+    # "1337x": X1337(fake_ua.random),
     "LimeTorrents": LimeTorrents(fake_ua.random),
     "TorLock": TorLock(fake_ua.random),
     "TorrentDownloads": TorrentDownloads(fake_ua.random),
     "CorsaroNero": CorsaroNero(fake_ua.random),
     "RarBG": RarBG(fake_ua.random),
+    "ThePirateBay": ThePirateBay(fake_ua.random),
 }
 COLORS = {
     "1337x": 161,
@@ -39,6 +41,7 @@ COLORS = {
     "TorrentDownloads": 202,
     "CorsaroNero": 239,
     "RarBG": 33,
+    "ThePirateBay": 180,
 }
 
 
@@ -188,7 +191,7 @@ def args_parser():
         "--version",
         help="script version",
         action="version",
-        version="gold-pirate v1.8.0",
+        version="gold-pirate v1.8.2",
     )
     return parser.parse_args()
 

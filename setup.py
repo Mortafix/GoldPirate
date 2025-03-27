@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="goldpirate",
-    version="1.8.0",
+    version="1.8.2",
     author="Moris Doratiotto",
     author_email="moris.doratiotto@gmail.com",
     description="A python module to download torrents",
@@ -41,6 +41,7 @@ setuptools.setup(
             "torrents/torrentdownload.py",
             "torrents/x1337.py",
             "torrents/rarbg.py",
+            "torrents/thepiratebay.py",
         ]
     },
     entry_points={"console_scripts": ["goldpirate=goldpirate.goldpirate:main"]},

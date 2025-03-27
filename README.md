@@ -35,3 +35,4 @@ goldpirate -q "Back to the Future" -s size -e rarbg -o /home/me/movies --plain-t
 4. [TorrentDownloads](https://torrentdownloads.me)
 5. [IlCorsaroNero](https://ilcorsaronero.link)
 6. [RarBG](https://rargb.to)
+7. [ThePirateBay](https://thepiratebay.org)
